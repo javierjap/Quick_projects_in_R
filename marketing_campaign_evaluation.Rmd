@@ -1,0 +1,1204 @@
+
+---
+title: "Evaluación Módulo 1"
+author: "Javier Alonso Padilla"
+date: "2024-02-22"
+output:
+  html_document:
+    theme: cerulean
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+# Vectores y Matrices
+
+**1. Sin usar bucles, calcule la suma de los inversos de los 1000 primeros números naturales: 1/1, 1/2, 1/3, … , 1/998, 1/999, 1/1000**
+```{r}
+inversos <- 1 / seq(1,1000,1)
+paste0("Suma de los inversos de los 1000 primeros números naturales: ", sum(inversos))
+```
+**2. Sean v1 y v2 dos vectores de igual longitud:**
+
++ **El vector v1 toma los siguientes valores 2, 2, 2, 2, 2, 5, 7.5, 10, 12.5**
+
++ **El vector v2 es un vector aleatorio de media igual a 0 y std igual a la unidad.**
+
+**Una vez definidos ambos vectores, calcule: la suma de v1 y v2, la diferencia entre v1 y v2 y la distancia euclídea entre ambos ($\sqrt{v_1^2 + v_2^2}$)**
+
+**Importe**: v1 debe ser definido según un proceso secuencial
+```{r}
+v1 <- c(seq(2,2, length.out=5), seq(5, 12.5, 2.5))
+v2 <- rnorm(9, 0, 1)
+suma <- v1 + v2
+diferencia <- v1 - v2
+dist_euclidea <- sqrt(sum(diferencia**2))
+
+cat("Suma entre ambos vectores:\n", suma)
+cat("Diferencia entre ambos vectores:\n", diferencia)
+
+paste0("Distancia euclidea entre ambos vectores: ", dist_euclidea) 
+```
+# Funciones y bucles
+
+**1. Defina una función que calcule el factorial de un número**
+```{r}
+#' @descripcion
+#' Función que devuelve el factorial de un número utilizando la clásica 
+#' definción por recursividad. Es decir, se vuelve a llamar a la función dentro
+#' de si misma para llegar al resultado final. Un ejemplo sencillo puede ser:
+#' factorial(4) = 4xfactorial(3) = 4x3xfactorial(2) = 4x3x2xfactorial(1) = 4x3x2x1
+#' Es importante destacar que el input de la función ha de ser un número natural.
+#' La función podría funcionar sin exigir que el input tenga que ser entero 
+#' (es decir acompaañdo de L) pero de esta manera se deja claro que hay que
+#' introducirlo de esa forma para ser más precisos.
+#' 
+#' @parametros
+#' n (numeric): Número del que se quiere hallar el factorial. Ha de ser un 
+#'              número natural. Si no se lanza un error.
+#'
+#' @ejemplos 
+#' factorial(10L); output -> 3628800
+#' factorial(-3); output -> "El valor introducido no es un natural. Prueba otra vez."
+#' 
+factorial <- function(n){
+  if (!is.integer(n) | n<0){
+    print("El valor introducido no es un natural. Prueba otra vez.")
+  }
+  else{
+    if (n > 1){
+      return (n * factorial(n-1L))
+    } else {
+      return (1)
+  }
+  }
+}
+factorial(10L)
+```
+  
+**2. Defina una función que, a partir de una lista de números, identifique si hay duplicados (y devuelva, al menos, uno de ellos)**
+```{r}
+#' Encuentra los números repetidos de una lista de números y devuelve al menos 
+#' uno de ellos
+#' 
+#' @descripcion
+#' La funcion duplicados itera sobre una lista de números y los va guardando en 
+#' un vector auxiliar (numeros). Si en este vector ya aparece ese número se 
+#' guarda en otra lista auxiliar que contiene los duplicados (duplicados).
+#' La función devuelve el nº de duplicados que desee el usuario. Si se piden más
+#' de los que hay se devuelve todos los duplicados. Sino es así, los que haya
+#' pedido el usuario. Además el return se hace según el orden en el que aparecen
+#' repetidos los numeros en la lista y solo teniendo en cuenta los elementos 
+#' númericos de una lista. Es decir, si se incluyen palabras o caracteres no se 
+#' tienen en cuenta.
+#' 
+#' @parametros
+#' lista_num (list): Lista sobre la que se quiere saber los repetidos
+#' rep_a_devolver (numeric): Número de repetidos a devolver
+#' 
+#' @ejemplos
+#' duplicados(list(1,2,3,4,5,4,2,2,34,5,64,3,2,-13), 2): output -> 2 4
+
+
+duplicados <- function(lista_num, rep_a_devolver){
+  numeros <- c()
+  duplicados <- c()
+  for (elem in lista_num){
+    if (is.numeric(elem) == TRUE){
+      if (!(elem %in% numeros)) { #Si el elemento no esta ya guardado se guarda
+      numeros <- append(numeros, elem)
+    } else { #Si ese elemento ya aparece en la lista se guarda en duplicados
+      duplicados <- append(duplicados, elem)
+    }
+    } else {
+      next
+    }
+  }
+  duplicados <- unique(duplicados) #Quitamos duplicados del vector de duplicados
+  if (length(duplicados) < rep_a_devolver){ 
+    return (duplicados) #Devuelvo todos si el usuario pide más de los que hay
+  } else {
+    return (duplicados[seq(1, rep_a_devolver,1)]) #Devuelvo el nº que se pide
+  }
+}
+duplicados(list(1,2,3,4,5,4,2,2,34,5,64,3,2,-13), 2)
+```
+
+**3. A partir de una lista de palabras, defina una función que imprima aquellas que empiecen por un carácter determinado. Incluye también el número de palabras que cumplen dicha condición**
+```{r}
+#' @descripcion
+#' Función que devuelve las palabras que empiezan por un caracter determinado 
+#' por el usuario. También devuelve el número de palabras que empiezan por este
+#' caracter concreto. Es importante destacar que se entiende por caracter una de 
+#' las letras del abecedario, es decir, no si aparece acentuada, con dieresis...
+#' Por tanto si aparecen las palabras "Árbol", "ético", "Úrsula"... me quedare
+#' con "a", "e" y "u" respectivamente. Lo hago de este manera porque entiendo que
+#' el usuario quiere saber las palabras que empiezan por una letra concreta 
+#' ya que un "a" con tilde sigue siendo una "a" o una "u" con dieresis sigue siendo
+#' una u.
+#' 
+#' @parametros:
+#' lista_palabras (list): Lista de palabras a comparar.
+#' caracter (character): Letra inicial 
+#' 
+#' @ejemplos
+#' coincide_caracter(list('Árbol', 'ánimo', 'asta', 'loco', 'coco'), 'L'): output -> 'loco' 1
+#' coincide_caracter(list('Árbol', 'ánimo', 'asta', 'loco', 'coco'), 'A'): output -> 'Árbol' 'ánimo' 'asta' 3
+#' 
+coincide_caracter <- function(lista_palabras, caracter){
+  palabras <- c()
+  for (i in 1:length(lista_palabras)){
+    if (chartr("áéíóú", "aeiou", tolower((substr(lista_palabras[[i]], 1, 1)))) == tolower(caracter)){ #Comparo si es igual la primera letra de la palabra puesta en minúsculas y sin tilde con el caracter concreto
+      palabras <- append(palabras, lista_palabras[[i]])
+    } 
+  }
+  devolver <- list(palabras, length(palabras))
+  print("Palabras que cumplen la condición:")
+  print(devolver[1])
+  print("Que son un total de: ")
+  print(devolver[2])
+}
+coincide_caracter(list('Árbol', 'ánimo', 'asta', 'loco', 'coco'), 'A')
+```
+
+**4. Defina una función para pasar de grados Celsius a Fahrenheit y Kelvin. Aplique la función a la siguiente lista de temperaturas:  $T=[15.6,25.2,36.0,21.2,17.9,28.3,32.1]$. Las fórmulas matemáticas que permiten relacionar las escalas de temperaturas son: $T_f=T_c(9/5)+32$ y  $T_k=T_c+273.15$**
+```{r}
+#' @descripcion
+#' Función que recibe como input una lista de temperaturas en Celsius y las 
+#' transforma a grados Fahrenheit o Kelvin según lo que pida el usuario. Si uno 
+#' de los elementos de la lista que se introduce no es númerico no se le 
+#' aplica la transformación y no se devuelve en la listra transformada.
+#' 
+#' @parametros
+#' lista_temperaturas (list): Lista que contiene las temperaturas a transformar
+#' escala (charachter): 'Kelvin' o 'Fahrenheit' según quiera el usuario
+#' 
+#' @ejemplos
+#' transform_temp(list(15.6,25.2,36.0,21.2,17.9,28.3,32.1), 'Fahrenheit'): output -> 60.08 77.36 96.80 70.16 64.22 82.94 89.78
+#' transform_temp(list(15.6,25.2,36.0,21.2,17.9,28.3,32.1), 'Kelvin'): output -> 288.75 298.35 309.15 294.35 291.05 301.45 305.25
+#' 
+transform_temp <- function(lista_temperaturas, escala){
+  transform <- c()
+  if (escala=='Fahrenheit'){
+    for (elem in lista_temperaturas){
+      if (is.numeric(elem)){ #Compruebo si elem es numeric
+        new <- elem*(9/5) + 32 #Aplico transformación
+        transform <- append(transform, new)
+      }
+    }
+  }
+  if (escala=='Kelvin'){
+    if (is.numeric(elem)){
+      for (elem in lista_temperaturas){
+        new <- elem + 273.15
+        transform <- append(transform, new)
+      }
+    }
+  }
+  return(transform)
+}
+transform_temp(list(15.6,25.2,36.0,21.2,17.9,28.3,32.1), 'Fahrenheit')
+```
+
+**5. Defina una función que, a partir de una lista de números, devuelva el mayor y el menor de la misma.**
+```{r}
+#' @description
+#' Función que devuelve el mayor y el menor número de una lista de números. La 
+#' idea que he seguido para construir la función se basa en el concepto de transitividad.
+#' Es decir, basicamente voy comparando cada elemento de la lista con un valor guardado.
+#' Por tanto si a es mi valor inicial guardado y b es mayor (menor) que a, entonces
+#' actualizo el máximo (mínimo) y si encuentro otro valor c mayor (menor) que b entonces 
+#' transitividad: a<b<c (a>b>c). Es importante destacar que tengo en cuenta si 
+#' en la lista se introduce un caracter ya que estos tienen un valor numérico asociado
+#' y podría dar lugar a error.
+#' 
+#' @parametros
+#' lista_numeros (list): Lista que contiene los números sobre los que hallar el máximo y el mínimo
+#' 
+#' @ejemplos
+#' mayor_menor(list(2,3,4,5,5,6,7,7)): output -> 2 7
+#' 
+mayor_menor <- function(lista_numeros){
+  mayor <- lista_numeros[[1]] #Inicializo el mayor como el 1er elemento de la lista
+  menor <- lista_numeros[[1]] #Inicializo el menor como el 1er elemento de la lista
+  for (elem in lista_numeros[-1]){
+    if (is.numeric(elem)){
+      if (elem > mayor){
+        mayor <- elem
+      } else if (elem < menor){
+        menor <- elem
+      }
+    } else {
+      next #Si no numérico pasa al siguiente elemento
+    }
+  }
+  print("El menor es:")
+  print(menor)
+  print("El mayor es:")
+  print(mayor)
+}
+mayor_menor(list(2,3,4,5,5,6,7,7))
+```
+
+# Dataframes
+En los siguientes ejercicios trabajaré con el dataset mtcars, que consta de 32 coches y 11 variables. Descripción de las variables que se van a utilizar:
+
++ mpg: Millas recorridas por galón de combustible.
++ cyl: Número de cilindros.
++ hp: Caballos de fuerza.
++ wt: Peso (1000 libras).
++ qsec: Tiempo empleado en recorrer 1/4 de milla (segundos).
+
+En primer lugar voy a cargar los datos para empezar a responder a las preguntas y la librería formattable para que los datos se pueden visualizar apropiadamente.
+```{r}
+library(formattable) # para presentar tablas de forma visual
+data <- mtcars
+```
+
+**9. ¿Cuáles son los 5 coches más pesados?  **
+```{r}
+
+head(data[order(data$wt, decreasing = TRUE), ], 5)
+```
+Por lo que se puede ver en la tabla los 5 coches más pesados son:
+
++ Lincoln Continental, Chrysler Imperial, Cadillac Fleetwood, Merc 450SE y Pontiac Firebird.  
+
+Lo más llamativo de esta tabla es que todos ellos poseen 8 cilindros. Esto es importante ya que la pieza clave de un motor y por tanto determina su peso. Siendo ésta una variable estrechamente conectada con el consumo, el peso y la aceleración. Algunas hipótesis que se pueden plantear son:
+
++ ¿Los coches con más (menos) cilindros consumen más (menos)?
+
++ Es probable que el coche más rápido tenga un número pequeño de cilindros
+
++ ¿Los coches más pesados son más potentes?
+
+**¿Qué coches tienen 8 cilindros y 175 o más caballos de fuerza? (ordene el resultado por caballos de fuerza) ** 
+
+Lo hallo de dos formas distintas.
+```{r}
+data_cilindros_fuerza <- data[(data$cyl == 8) & (data$hp >= 175), ]
+data_cilindros_fuerza[order(data_cilindros_fuerza$hp, decreasing = TRUE),]
+```
+
+
+**¿Cuál es el coche más rápido?  **
+
+De nuevo lo compruebo de dos formas distintas.
+```{r}
+#Pongo dos formas de hallarlo
+head(data[order(data$qsec, decreasing = TRUE), ],1) #Forma 1
+data[data$qsec == max(data$qsec),] #Forma 2
+```
+
+Como era de esperar el coche más rápido solo posee 4 cilindros. Esto hace que el motor pese menos y por tanto le cueste menos esfuerzo acelerar. Concretamente se trata de un Merc 230.
+
+**¿Cuál es el coche que menos combustible consume?**
+
+```{r}
+head(data[order(data$mpg, decreasing = TRUE), ],1) #Forma 1
+data[data$mpg == max(data$mpg),] #Forma 2 
+```
+
+
+
+**¿Cuál es el consumo medio de los coches de 4 cilindros?  **
+```{r}
+data_4_cyl = data[data$cyl==4, ] 
+paste0("El consumo medio de los coches de 4 cilindros: ", round(mean(data_4_cyl$mpg), 2))
+```
+
+**10. Cree un histograma del peso de los coches. Pinte dos líneas verticales señalando la media (azul) y mediana (rojo)**
+```{r}
+hist(data$wt, main="Histograma del peso de los coches", xlab="Peso en 1000 de libras", ylab="Frecuencia")
+abline(v = mean(data$wt), col = "blue", lwd = 2, lty = 2)  
+abline(v = median(data$wt), col = "red", lwd = 2, lty = 2)
+```
+
+Es bastante dificil extraer información de un histograma con un número tan bajo de observaciones. Pero si hay que destacar algo comentaría que la mediana es ligeramente superior a la media. Además ambos valores se encuentran entro las 3000 y 3500 libras. Por último, mencionar que la cola izquiera de la distribución acumula más peso que la cola derecha lo que hace que la distribución sea asimétrica.
+
+**11. Cree un gráfico que muestre la relación entre el peso (wt) y las millas por galón (mpg)**
+```{r}
+plot(data$wt, data$mpg, main = "Relación entre peso y millas por galón", xlab = "Peso", ylab = "Millas por galón", pch=19,  col = factor(data$cyl))
+abline(lm(mpg ~ wt, data = data), col = "blue")
+legend("topright", legend = levels(factor(data$cyl)), pch = 19, col = factor(levels(factor(data$cyl))))
+```
+
+Como se aprecia claramente y como había formulado antes, hay una relación negativa entre las millas por galón y el peso. Esto significa que a mayor peso se pueden hacer menor número de millas. Además, se cumple lo que he comentado previamente acerca de los cilindros y su relación con el peso. A mayor número de cilindros mayor peso y en consecuencia mayor consumo.
+
+**12. Convierta la variable cyl en un factor. A continuación, cree un diagrama de caja que represente los caballos de fuerza (hp) en función del número de cilindros (cyl)**
+
+Utilizo dos formas distintas para graficar el boxplot.
+```{r}
+data$cyl <- as.factor(data$cyl) #Convierto a factor
+levels(data$cyl) #Para ver cuantos colores tengo que usar
+boxplot(data$hp ~ data$cyl, col = c("skyblue", "skyblue2", "skyblue4"), xlab="Cilindros", ylab="Caballos", main="Distribución caballos según cilindros")
+
+#Otra forma que es mejor ya que no es necesario ver el número de niveles es la vista en la solución de la autoevaluación
+color_job <- rainbow(length(unique(data$cyl)))
+
+boxplot(hp ~ cyl, data = data, col = color_job,
+        main = "Distribución caballos según cilindros",
+        xlab = "Cilindros", ylab = "Caballos")
+```
+
+Como se aprecia los coches de 8 cilindros son los que más caballos poseen seguidos de los 6 y 4 cilindros respectivamente. Además, los coches de 8 cilindros poseen una gran dispersión en cuanto a número de caballos, alcanzando valores que van desde los 150 a los 300. Por otra parte, los coches de 6 cilindros tienen una menor dispersión estando los caballos muchos más concentrados. Por último los coches de 4 cilindros tienen una menor dispersión que los de 8 pero mayor a los de 6 cilindros. Un hecho destacable es que el primer cuatil de la distribución de los coches de 8 cilindros es superior al tercer cuartil de la distribución de los coches de 6 cilindros y que valor máximo de la distribución de los coches de 4 cilindros.
+De nuevo se cumple lo formulado. Los coches con más número de cilindros poseen un mayor número de caballos. Esto es algo razonable ya que necesitan mayor potencia para poder mover una mayor cantidad de peso.
+
+# Preprocesado
+
+
+El dataset "marketing_campaing.parquet" contiene 2240 observaciones de 22 variables que contienen información sobre el perfil de los clientes de un supermercado. Esta información hacen referenica las **PERSONAS**, a los **PRODUCTOS**, a las **PROMOCIONES** y al **LUGAR**. De manera más detallada la descripción de la base de datos es la siguiente:
+
++ **Variables numéricas**:
+  + ID: Identificador único del cliente
+  + Year_Birth: Año de nacimiento del cliente
+  + Income: Ingresos anuales del hogar del cliente
+  + Kidhome: Número de niños en el hogar del cliente
+  + Teenhome: Número de adolescentes en el hogar del cliente
+  + Dt_Customer: Fecha de inscripción del cliente en la empresa
+  + Recency: Número de días desde la última compra del cliente
+  + MntWines: Monto gastado en vino en los últimos 2 años
+  + MntFruits: Monto gastado en frutas en los últimos 2 años
+  + MntMeatProducts: Monto gastado en carne en los últimos 2 años
+  + MntFishProducts: Monto gastado en pescado en los últimos 2 años
+  + MntSweetProducts: Monto gastado en dulces en los últimos 2 años
+  + MntGoldProds: Monto gastado en oro en los últimos 2 años
+  + NumDealsPurchases: Número de compras realizadas con descuento
+  + NumWebPurchases: Número de compras realizadas a través del sitio web de la empresa
+  + NumCatalogPurchases: Número de compras realizadas utilizando un catálogo
+  + NumStorePurchases: Número de compras realizadas directamente en tiendas
+  + NumWebVisitsMonth: Número de visitas al sitio web de la empresa en el último mes
+
++ **Variables categóricas**:
+  + Education: Nivel educativo del cliente: 1, 2n Cycle; 2, Basic; 3, Graduation; 4, Master; 5, PhD
+  + Marital_Status: Estado civil del cliente
+  + Complain: 1 si el cliente se quejó en los últimos 2 años, 0 en caso contrario
+  + Response: 1 si el cliente aceptó la oferta en la última campaña, 0 en caso contrario
+  
+```{r}
+suppressWarnings(suppressPackageStartupMessages(library(arrow)))
+
+suppressWarnings(suppressPackageStartupMessages((library(formattable))))
+suppressWarnings(suppressPackageStartupMessages((library(tidyverse))))
+suppressWarnings(suppressPackageStartupMessages(((library(skimr)))))
+suppressWarnings(suppressPackageStartupMessages((library(lubridate))))
+suppressWarnings(suppressPackageStartupMessages((library(gridExtra))))
+suppressWarnings(suppressPackageStartupMessages((library(dlookr))))
+suppressWarnings(suppressPackageStartupMessages((library(corrplot))))
+suppressWarnings(suppressPackageStartupMessages(library(mice)))
+suppressWarnings(suppressPackageStartupMessages(library(solitude)))
+suppressWarnings(suppressPackageStartupMessages(library(DMwR2)))
+suppressWarnings(suppressPackageStartupMessages(library(sampling)))
+suppressWarnings(suppressPackageStartupMessages(library(UBL)))
+
+
+
+setwd("C:/Users/alons/OneDrive/Documentos/Curso_Big_Data_UNED/modulo_1/eval_mod_1")
+df <- read_parquet('marketing_campaing.parquet')
+```
+Antes de nada, voy a transformar las variables categóricas a tipo factor para poder trabajar con ellas adecuadamente. 
+```{r}
+df$Education <- as.factor(df$Education)
+df$Marital_Status <- as.factor(df$Marital_Status)
+df$Complain <- as.factor(df$Complain)
+df$Response <- as.factor(df$Response)
+df$fecha_Customer <- dmy(df$Dt_Customer)
+```
+
+El análisis de este dataset se realiza en el siguiente orden. En primer lugar, comienzo realizando un estudio descriptivo de las variables categóricas y numéricas para detectar los valores faltantes. Tras ello, analizo con mayor detalle las variables categóricas y numéricas para ver posibles relaciones a explotar a la hora de imputar los datos faltantes. Una vez conozco éstas conexiones imputo los datos. Finalmente, para crear un tablón final compruebo si existen instancias anómalas que me pueden sesgar el análisis de negocio. Con todo ello respondo algunas de las preguntas de negocio que se pueden investigar con la información contenida en estos datos. Como conclusión del notebook muestro un ejemplo de equilibrado de muestras con este dataset y presento alguna aplicación donde éstos datos podrían ser útiles. 
+
+# 1. Análisis descriptivo
+Antes de pasar al análisis gráfico del dataset analizo el número de missing y el porcentaje de estos en cada una de las variables del dataset.
+
+```{r}
+desc_df <- skim(df) # 
+
+var_type_missing_df <- desc_df %>% 
+  mutate(n_missing_perc = 100 * round(1-complete_rate, 3)) %>%
+  select(skim_type, skim_variable, n_missing, n_missing_perc) %>% 
+  arrange(skim_type, n_missing)
+
+formattable(var_type_missing_df)
+```
+
+Se observa que los valores nulos están mayoritariamente en las observaciones sobre gasto en determinados productos y renta. También aparecen valores faltantes para las variables de Educación y Estado Civil. Cada una de estas variables tiene 157 missings (lo que equivale a un 7% de las observaciones), excepto en el caso de la variable Income la cual tiene 180 missings (8% de observaciones). Si en esas instancias solo fueran nulas en esas variables se puede llegar a alcanzar 64% de valores nulos en el total de la muestra. Obviamente esto no será así porque habrá instancias que poseeran valores nulos en  varias variables. Si eliminasemos todas las observaciones que poseen valores nulos en alguna variable se eliminaría el siguiente porcentaje:
+```{r}
+df_wonulls <- df %>% drop_na()
+
+round(1 - nrow(df_wonulls) / nrow(df), 3)*100
+```
+De esta manera me quedaría con un dataset con 1176 registros. Lo que equivale a perder un 47.5% de la muestra inicial. Esto es algo inadmisible y que motiva el uso de técnicas de imputado de datos.  
+A continuación comienzo con el análisis gráfico, el cual sirve para investigar el efecto que pueden tener los outliers en la muestra y para dar respuesta a algunas hipótesis de negocio.
+
+# 1.1 Variables numéricas
+
+```{r}
+desc_numeric_var_df <- desc_df %>% 
+  filter(skim_type == "numeric") %>% 
+  select(skim_variable, 
+         numeric.mean, numeric.sd, 
+         numeric.p0, numeric.p25, numeric.p50, numeric.p75, numeric.p100
+         ) 
+
+formattable(desc_numeric_var_df)
+```
+
+Viendo los estadísticos de la tabla anterior es evidente que las variables no se distribuyen normalmente y ademas las variables monetarias parecen sufrir de la presencia de valores atípicos (aunque no demasiado extremos).    
+Para conocer más a fondo la distribución de las variables numéricas voy a utilizar 3 funciones distintas: histogram_plot, boxplot_var_target_plot (definidas en la corrección de la autoevaluación) y plot_outlier de la librería dlookr. Concretamente voy a utilizarla en las variables que se refieren a cantidades monetarias. Es decir, las variables numéricas que representan conteos no las incluyo en este análisis.
+```{r}
+histogram_plot <- function(data, var, bins=50){
+  # Función pinta histograma sobre variable numérica
+  
+  # Son eliminados los registros nulos de la variable previamente 
+  # a pintar los valores que toman dicha variable 
+  
+  # data: dataframe
+  # var: string con variable numérica del dataset
+  # bins: número de cortes de la variable cuantitativa (por defecto 50)
+  
+  var <- as.symbol(var)
+  
+  data_na_omit <- data %>% select(!!var) %>% filter(!is.na(!!var))
+  
+  g <- ggplot(data_na_omit, aes(x=!!var)) + geom_histogram(bins=50, fill = "lightblue"
+    )
+  # g + ggtitle(paste0("Histograma ", var)) + ylab("N")
+}
+
+boxplot_var_target_plot <- function(data, var, target_var = "CLASE"){
+  
+  # Función pinta gráfico de cajas y bigotes sobre variable numérica (relación variable target)
+  
+  # Son eliminados los registros nulos de la variable previamente 
+  # a pintar los valores que toman dicha variable 
+  
+  # data: dataframe
+  # var: string con variable numérica del dataset
+  # target_var: string con variable categórica del dataset (por defecto, "CLASE")
+
+  var <- as.symbol(var)
+  target_var <- as.symbol(target_var)
+  
+  data_na_omit <- data %>% select(!!var, !!target_var) %>% filter(!is.na(!!var))
+
+  ggplot(data_na_omit, aes(y=!!var, x=!!target_var, col=!!target_var)) + geom_boxplot()
+
+}
+```
+La distribución de las variables numéricas es la siguiente:
+```{r}
+Income_hist <- histogram_plot(df, "Income") 
+MntWines_hist <- histogram_plot(df, "MntWines") 
+MntFruits_hist <- histogram_plot(df, "MntFruits") 
+MntMeatProducts_hist <- histogram_plot(df, "MntMeatProducts") 
+MntFishProducts_hist <- histogram_plot(df, "MntFishProducts") 
+MntSweetProducts_hist <- histogram_plot(df, "MntSweetProducts") 
+MntGoldProds_hist <- histogram_plot(df, "MntGoldProds") 
+
+grid.arrange(Income_hist, MntWines_hist,
+             MntFruits_hist, MntMeatProducts_hist,
+             MntFishProducts_hist, MntSweetProducts_hist,
+             MntGoldProds_hist, nrow=4, ncol = 2)
+```
+
+
+Utilizando la plot_outlier puede ver si hay alguna diferencia al tener o no tener en cuenta los valores atípicos.
+```{r}
+plot_outlier(df, Income)
+plot_outlier(df, MntMeatProducts)
+plot_outlier(df, MntWines)
+plot_outlier(df, MntFruits)
+plot_outlier(df, MntFishProducts)
+plot_outlier(df, MntSweetProducts)
+plot_outlier(df, MntGoldProds)
+```
+
+
+Observando los resultados obtenidos con la función histogram_plot y plot_outlier se hace visible la presencia de valores atípicos por las colas derechas tan alargadas que aparecen. Aunque estos no parece que afecten de manera dramática a la distribución de las variables sí que se producen ciertas modificaciones cuando no se les tiene en cuenta. Para confirmar estos resultados utilizo la función outliers_univariantes la cual me permite deshacerme de los outliers de una variable concreta. Además haciendo uso de la función boxplot_var_target_plot pinto los gráficos de caja y bigote de las variables income y MntWines (cojo estas dos como muestra de las variables monetarias) respecto a la variable educación y estado civil para ver si el efecto de los outliers es crítico.
+```{r}
+outliers_univariantes <- function(data, var){
+  
+  # Identificar outliers
+  outliers <- boxplot.stats(data[[var]])$out # para no pintar el gráfico
+  var <- as.symbol(var)
+  
+  return(data %>% filter(!(!!var %in% outliers)))
+}
+
+df_wo_outliers_income <- outliers_univariantes(df, "Income")
+df_wo_outliers_mntwine <- outliers_univariantes(df, "MntWines")
+```
+
+```{r}
+income_educ_bp <- boxplot_var_target_plot(df, "Income", "Education")
+income_educ_bp_wo <- boxplot_var_target_plot(df_wo_outliers_income, "Income", "Education")
+gasto_educ_bp <- boxplot_var_target_plot(df, "MntWines", "Education")
+gasto_educ_bp_wo <- boxplot_var_target_plot(df_wo_outliers_mntwine, "MntWines", "Education")
+income_eciv_bp <- boxplot_var_target_plot(df, "Income", "Marital_Status")
+income_eciv_bp_wo <- boxplot_var_target_plot(df_wo_outliers_income, "Income", "Marital_Status")
+gasto_eciv_bp <- boxplot_var_target_plot(df, "MntWines", "Marital_Status")
+gasto_eciv_bp_wo <- boxplot_var_target_plot(df_wo_outliers_mntwine, "MntWines", "Marital_Status")
+
+grid.arrange(income_educ_bp, income_educ_bp_wo,
+             nrow = 2, ncol = 1)
+grid.arrange(gasto_educ_bp, gasto_educ_bp_wo,
+             nrow = 2, ncol = 1)
+grid.arrange(income_eciv_bp, income_eciv_bp_wo,
+             nrow = 2, ncol = 1)
+grid.arrange(gasto_eciv_bp, gasto_eciv_bp_wo,
+             nrow = 2, ncol = 1)
+
+```
+
+
+Como se puede apreciar sí que existen outliers pero su efecto no es determinante. De hecho se aprecia claramente que los cambios en las medidas centrales y de dispersión no es muy grande. Es por ello que para contestar a las preguntas de negocio en la Sección 1.5 voy a tener en cuenta todo el dataset (no voy a renunciar a los outliers).
+
+Lo siguiente que analizo son las correlaciones entre algunas de las variables numéricas. También voy a estudiar dicha correlación cuando tomo logaritmos en esas variables.
+
+```{r}
+num_vars <- c("Income", "MntWines", "MntFruits", "MntMeatProducts", "MntFishProducts", "MntSweetProducts", "NumDealsPurchases", "NumWebPurchases", "NumCatalogPurchases", "NumStorePurchases", "NumWebVisitsMonth")
+df_num <- df %>% 
+  select(num_vars) # nos quedamos con las variables numéricas
+df_not_num <- df %>%
+  select(-num_vars)
+
+
+correlacion_pearson_df = cor(df_num, use = "pairwise.complete.obs")
+
+corrplot(correlacion_pearson_df,  method="number", type="upper", number.cex = 0.8)
+
+
+```
+
+Se puede ver que la correlación de Pearson entre las diferentes variables es significativa. En particular, merece mención especial la correlación encontrada entre Income y MntWines e Income y NumCatalogPurchases (ambas de 0.69). Esta relación entre las variables va a ser de gran utilidad en la imputación de valores faltantes ya que me va a permitir modelizar la relación entre estas variables. Asimismo, comentar que la correlación entre MntMeatProducts y NumCatalogPurchases es de 0.72 pero esta no me va a ser de utilidad para una modelización posterior (sí que será útil para obtener mejores resultados en los árboles de decisión del algorimo MICE).
+```{r}
+constante <- 0.01 # perturbación
+
+# transformación logarítmica
+lista_num_log <- lapply(df_num, function(x) {
+  if (is.numeric(x)) {
+    log(x + constante)
+  } else {
+    x
+  }
+})
+
+df_num_log <- as.data.frame(lista_num_log)
+correlacion_pearson_df_log = cor(df_num_log, use = "pairwise.complete.obs")
+corrplot(correlacion_pearson_df_log,  method="number", type="upper", number.cex = 0.8)
+```
+
+Además, cuando aplico una transformación logaírimica en las variables numéricas para conseguir unas distribución más normal los resultados mejoran notablemente. Por ello, a partir de este momento trabajo con estas variables transformadas. Posteriormente reharé la transformación para obtener los valores sin logaritmos.
+```{r}
+df_new <- bind_cols(df_num_log, df_not_num)
+```
+
+# 1.2 Variables categóricas
+Lo primero que se viene a la mente al trabajar con variables categóricas es conocer cómo se distribuyen por categorias. Para ello utilizo la siguiente función:  
+```{r}
+# count para variables categóricas o de conteo
+
+distinct_function_count <- function(data, var){
+  # Función para obtener los distintos niveles de una variable
+  # contando las veces que aparecen en la tabla 
+  
+  var <- as.symbol(var)
+  counts_values_var <- data %>% group_by(!!var) %>% count %>% arrange(desc(n))
+  
+  total <- sum(counts_values_var$n)
+  counts_values_var <- counts_values_var %>% mutate(percentage = round(n / total * 100, 3))
+  
+  return(counts_values_var)
+}
+```
++ Marital_Status
+
+```{r}
+formattable(distinct_function_count(df_new, "Marital_Status"))
+df_new <- df_new %>% 
+  subset(!(Marital_Status %in% c("YOLO", "Absurd")))
+df_new$Marital_Status <- as.factor(as.character(df_new$Marital_Status))
+```
+Viendo la distribución de la variable de Estado Civil he decidido eliminar las observaciones 'Absurd' y 'YOLO'. Además, a la hora de imputar los valores faltantes de esta variable en la Sección 1.3.2 voy a utilizar el algoritmo KNN. La justificación de usar este algoritmo viene dada por el hecho de que el número de missings es considerable y no es correcto asignarlo a la clase mayoritaría.
+
++ Education
+
+```{r}
+formattable(distinct_function_count(df_new, "Education"))
+```
+
+A la hora de imputar los valores faltantes en la Sección 1.3.2 lo voy a hacer usando el algoritmo KNN ya que al ser un número considerable de valores faltantes (por encima del 7%) es bastante probable que un gran número de esas observaciones no pertenezcan a la categoría Graduation. Y añadir un 7% de observaciones a la categoría más común podría sesgar los resultados de una modelización posterior. 
+
++ Response
+
+```{r}
+formattable(distinct_function_count(df_new, "Response"))
+```
+
+Se mantienen los niveles de las variables ya que en ambos casos el porcentaje es considerable y no requiere de ningún tipo de agrupación.
+
++ Complain 
+
+```{r}
+formattable(distinct_function_count(df_new, "Complain"))
+```
+La presencia de observaciones en la que los individuos se han quejado en los últimos 2 años es mínima, no llegando ni siquiera al 1%. De todas formas, no voy a trabajar con esta variable por lo que no la voy a modificar.
+
+Hay otras 3 variables que en un principio no son categóricas pero voy a trabajar con ellas como si lo fueran. Estas son Kidhome y Teenhome (voy a sumar ambas para que signifiquen número de hijos) y la variable edad ya que voy a trabajar con ella por tramos.  
+
++ Teenhome
+
+```{r}
+formattable(distinct_function_count(df_new, "Teenhome"))
+```
++ Kidhome
+
+```{r}
+formattable(distinct_function_count(df_new, "Kidhome"))
+```
++ num_hijos
+
+```{r}
+data_num_hijos <- df_new %>% 
+  select(c("Kidhome", "Teenhome")) %>%
+  mutate(num_hijos = Kidhome+Teenhome)
+formattable(distinct_function_count(data_num_hijos, "num_hijos"))
+```
+
++ grupo_edad
+
+```{r}
+data_edad <- df_new %>%
+  select(c("Year_Birth")) %>%
+  mutate(edad = 2024 - Year_Birth) %>%
+  mutate(grupo_edad = cut(as.numeric(edad), breaks = c(25, 35, 45, 55, 65, 75, Inf),
+                    labels = c("Under 35", "35-45", "46-55", "56-65", "66-75", "Over 75")))
+formattable(distinct_function_count(data_edad, "grupo_edad"))
+```
+
+# 1.3 Imputación de valores faltantes
+El objetivo de la imputación no es reemplazar los datos faltantes por la predicción más precisa de estos, sino preservar las características de la distribución de tal manera que los análisis basados en estadísticos como la media, percentiles o correlaciones no se modifiquen. De esta manera voy a optar por imputar los datos de las variables evitando los métodos no estocásticos de imputación que suelen provocar que las variables imputadas estén más concentradas en torno a la media, la mediana o la moda y por tanto se reduce la dispersión. Es por eso que para imputar las variables categóricas empleo el algoritmo KNN y para las variables numéricas empleo regresiones lineales y el algoritmo MICE. Este último algoritmo tiene la ventaja de imputar el mismo valor faltante varias veces de manera que reduce la incertidumbre asociada a una imputación puntual.
+
+## 1.3.1 Imputación de variables numéricas
+En la Sección 1.1 se vio que existe una correlación lineal significativa entre alguna de las variables numéricas. Por ello, he decidido explotar está información para imputar los datos faltantes de estas variables. La forma en la que voy a proceder es la siguiente:
+
++ 1) Estimo una regresión lineal para imputar los missings de Income (180) utilizando como regresor la variable MntMeatProducts (la cual no tiene missings) ya que ambas tienen una correlación lineal elevada.
+
++ 2) Una vez imputada la variable Income la utilizo  junto a MntMeatProducts para imputar los missings de la variable MntWines (157)  utilizando una estrategia similar al caso anterior ya que de nuevo la correlación es elevada.
+
++ 3) Imputo el resto de valores faltantes en las valores numéricas utilizando el algoritmo MICE.
+
++ 4) Una vez ya tengo imputadas todas las observaciones faltantes, rehago la transformación logarítmica que había aplicado previamente.
+```{r}
+#PASO 1
+lm_Income <- lm(Income ~ MntMeatProducts, data=df_new)
+
+summary(lm_Income)
+
+df_final <- df_new %>% 
+          mutate(INCOME_IMPUTE = predict.lm(lm_Income, newdata=df_new %>% select(MntMeatProducts, NumCatalogPurchases)))
+df_final <- mutate(df_final, Income := coalesce(Income, INCOME_IMPUTE))
+df_final$INCOME_IMPUTE <- NULL
+```
+Una vez ya está imputada la variable Income, paso a imputar la variable MntWines.
+```{r}
+lm_MntWines <- lm(MntWines ~ Income + MntMeatProducts, data=df_final)
+
+summary(lm_MntWines)
+
+df_final <- df_final %>% 
+          mutate(MNTWINES_IMPUTE = predict.lm(lm_MntWines, newdata=df_final %>% select(Income, MntMeatProducts )))
+df_final <- mutate(df_final, MntWines := coalesce(MntWines, MNTWINES_IMPUTE))
+df_final$MNTWINES_IMPUTE <- NULL
+```
+Por último paso a hacer una estimación múltiple del resto de variables numéricas utilizando un árbol de decisión.
+```{r}
+df_sin_educ_eciv <- df_final %>% 
+  select(-c("Education", "Marital_Status")) #Quito las variables categóricas que no quiere imputar aún
+df_educ_eciv <- df_final %>% 
+  select(c("Education", "Marital_Status"))
+cart_imp <- mice(df_sin_educ_eciv, meth = "cart", minbucket = 6)
+df_imputed <- complete(cart_imp)
+df_final <- bind_cols(df_educ_eciv, df_imputed)
+df_final <- df_final %>%
+  mutate(across(all_of(num_vars), ~ exp(.x)))
+```
+
+Para cerrar la imputación de las variables numéricas compruebo las distribuciones de las variables sin y con datos imputados. Para ello utilizo la funcion distribución que defino a continuación.
+```{r}
+distribucion <- function(original_data, impute_data, var){
+  var<- as.symbol(var) 
+  grafico <- ggplot() +
+    geom_density(data = original_data %>% filter(!is.na(!!var)), aes(x = !!var, fill = 'ORIGINAL'), alpha = 0.5) + 
+    geom_density(data = impute_data, aes(x = !!var, fill = 'IMPUTADO'), alpha = 0.5) + 
+    scale_fill_manual(values = c(ORIGINAL = 'skyblue', IMPUTADO = 'red'), name='') + 
+    ggtitle('Distribución datos Originales vs. Imputados')
+  print(grafico)
+
+}
+```
+
+
++ Income  
+```{r}
+distribucion(df, df_final, "Income")
+```
+
+
++ MntWines  
+```{r}
+distribucion(df, df_final, "MntWines")
+```
+
+
++ MntFruits  
+```{r}
+distribucion(df, df_final, "MntFruits")
+```
+
+
++ MntFishProducts  
+```{r}
+distribucion(df, df_final, "MntFishProducts")
+```
+
+
++ MntSweetProducts  
+```{r}
+distribucion(df, df_final, "MntSweetProducts")
+```
+
+
++ NumWebPurchases  
+```{r}
+distribucion(df, df_final, "NumWebPurchases")
+```
+
+
++ NumWebVisitsMonth  
+```{r}
+distribucion(df, df_final, "NumWebVisitsMonth")
+```
+
+
+Las densidades de las variables con datos imputados y sin imputar son muy similares. Este era el objetivo de la imputación ya que de este modo los posibles modelos que se apliquen con los datos completos no estarán sesgados.
+
+## 1.3.1 Imputación de variables categóricas
+Las variables categóricas que poseen datos faltantes son Education y Marital_Status. En ambos casos tiene 157 missings. 
+Para imputarlas voy a utilizar el algoritmo de KNN utilizando toda la información que tengo disponible hasta ahora. Es decir, también utilizo las variables numéricas imputadas.
+```{r}
+df_final <- df_final %>% 
+  select(-c("ID", "Dt_Customer", "fecha_Customer")) #Elimino las columnas con fechas e ID porque generan problemas en el KNN
+df_final <- knnImputation(df_final, k=5)
+
+```
+
+# 1.4 Detección de instancias anómalas
+Una vez se han imputado los datos faltantes de todas las variables, tanto categóricas como no, se va a aplicar el método Isolation Forest de la librería solitude para detectar posibles instancias que sesguen los resultados finales. 
+
+```{r}
+df_anomaly <- df_final
+
+
+set.seed(123)  # Establecer semilla para reproducibilidad
+clf <- isoforest <- isolationForest$new(sample_size = as.integer(nrow(df_final)),
+                                        num_trees = 100,
+                                        seed = 123
+                                        )
+
+clf$fit(dataset = df_anomaly)
+```
+
+```{r}
+prob_anomaly <- clf$predict(data = df_final)$anomaly_score
+df_final <- df_final %>% mutate(score = prob_anomaly)
+
+threshold <- 0.6
+
+df_final <- df_final %>% mutate(cluster = if_else(score > threshold, 1, 0))
+df_final$cluster <- as.factor(df_final$cluster)
+df_final$score <- NULL
+
+media_cluster_df <- df_final %>% 
+                    select(cluster,
+                           Income, 
+                           MntWines,
+                           MntFruits, 
+                           MntMeatProducts, 
+                           MntFishProducts,
+                           MntSweetProducts,
+                           MntGoldProds) %>%
+                    group_by(cluster) %>% 
+                    summarise(N = n(),
+                              MEAN_Income = mean(Income),
+                              MEAN_MntWines = mean(MntWines),
+                              MEAN_MntFruits = mean(MntFruits),
+                              MEAN_MntMeatProducts = mean(MntMeatProducts),
+                              MEAN_MntFishProducts = mean(MntFishProducts),
+                              MEAN_MntSweetProducts = mean(MntSweetProducts),
+                              MEAN_MntGoldProds = mean(MntGoldProds)
+                    )
+
+formattable(media_cluster_df)
+```
+Por tanto para cerrar esta parte de preprocesado elimino aquellas instancias que están clasificadas como anómalas (cluster = 1). 
+```{r}
+df_final <- df_final %>% filter(cluster == 0)
+df_final$cluster <- NULL
+```
+
+# 1.5 Cuestiones de negocio 
+Antes de continuar vamos a crear una serie de variables que ofrecen un gran potencial a la hora de analizar el dataset. Estas son:  
+
++ total_gastos: Suma de todos los gastos en diferentes productos  
++ total_compras: Suma de todas las compras por diferentes vías  
++ num_hijos: Total hijos del cliente  
++ edad: Edad del cliente  
++ grupo_edad: Discretización de la variable edad por grupos para facilitar su análisis  
++ ratio_compras_descuento: Ratio entre el nº de compras con descuento y el nº total de compras realizadas  
++ ratio_gastos_income: Ratio entre el total de gastos en el supermercado y la renta del cliente  
+
+Además defino las siguientes funciones para apoyarme en el análisis de negocio.
+```{r}
+bar_plot <- function(data, var){
+  
+  var <- as.symbol(var)
+  data_na_omit <- data %>% select(!!var) %>% filter(!is.na(!!var))
+  
+  g <- ggplot(data_na_omit, aes(x = !!var)) + 
+    geom_bar(fill="lightblue") +
+    geom_text(stat = "count", aes(label = after_stat(count)), vjust = -0.5, color = "red")
+  print(g)
+
+}
+
+bar_target_var_plot <- function(data, var, target_var = "CLASE"){
+  
+  var <- as.symbol(var)
+  target_var <- as.symbol(target_var)
+  
+  data_na_omit <- data %>% 
+    select(!!var, !!target_var) %>% 
+    filter(!is.na(!!var))
+  
+  g <- ggplot(data_na_omit, aes(x = !!var, fill = !!target_var)) + 
+    geom_bar() +
+    geom_text(stat = "count", aes(label = after_stat(count)), vjust = -0.5, color = "red")
+  print(g)
+}
+
+histogram_target_var_plot <- function(data, var, target_var = "CLASE"){
+  var <- as.symbol(var)
+  target_var <- as.symbol(target_var)
+  len <- length(levels(df$target_var))
+  data_na_omit <- data %>% 
+    select(!!var, !!target_var) %>% 
+    filter(!is.na(!!var))
+  g <- ggplot(data_na_omit, aes(x = !!var, fill = !!target_var)) +
+  geom_histogram(binwidth = 5, color = "#C8D5CD") +
+  scale_fill_viridis_d(option = "viridis", name = target_var)
+}
+```
+
+```{r}
+df_final_analisis <- df_final %>%
+  mutate(total_gastos = MntWines+MntFruits+MntMeatProducts+MntFishProducts+MntSweetProducts+MntGoldProds,
+         total_compras = NumWebPurchases + NumCatalogPurchases + NumStorePurchases,
+         num_hijos = Kidhome+Teenhome,
+         edad = 2024 - Year_Birth,
+         grupo_edad = cut(as.numeric(edad), breaks = c(25, 35, 45, 55, 65, 75, Inf),
+                    labels = c("Under 35", "35-45", "46-55", "56-65", "66-75", "Over 75")),
+         ratio_compras_descuento = NumDealsPurchases/total_compras,
+         ratio_income_gastos = Income/total_gastos)
+
+```
+
+Ahora, es turno de realizar un pequeño estudio del negocio para conocerlo un poco mejor y poder dar una opinión fundada del posible potencial que tienen los datos con los que se está trabajando.  
+La primera cuestión a responder sobre el negocio es:  
+
++ ¿Cómo es la composición de los clientes del supermercado según edad?¿Y según estado civil?
+```{r}
+histogram_target_var_plot(df_final_analisis %>% filter(edad<100), "edad", "Education") + ggtitle("Distribución de los clientes del supermercado por Educación")
+histogram_target_var_plot(df_final_analisis %>% filter(edad<100), "edad", "Marital_Status") + ggtitle("Distribución de los clientes del supermercado por Estado Civil")
+```
+
+De la información gráfica se puede extraer la conclusión de que la mayor parte de clientes están comprendidos en la franja de entre los 50 y los 60 años. A nivel educativo la mayor parte de ellos ha alcanzado un nivel de gradudado. Esto no es sorprendente ya que como se vio en el análisis de las variables categóricas este nivel acumula una parte muy grande las observaciones. 
+En cuanto a la situación civil de los clientes, la mayor parte de ellos se encuentran en relaciones (Married o Together).
+Lo siguiente que parece razonable preguntar es:  
+
++ ¿Cómo se distribuye el gasto en productos según nivel educativo? ¿Y según estado civil? ¿Y según edad?  
+```{r}
+df_gasto_educacion <- df_final_analisis %>% 
+  gather(key = "producto", value = "gasto", c("MntFishProducts", "MntFruits","MntGoldProds","MntMeatProducts","MntSweetProducts", "MntWines")) %>% 
+  group_by(Education, producto) %>% 
+  summarize(total_gasto = mean(gasto)) 
+
+df_gasto_ecivil <- df_final_analisis %>% 
+  gather(key = "producto", value = "gasto", c("MntFishProducts", "MntFruits","MntGoldProds","MntMeatProducts","MntSweetProducts", "MntWines")) %>% 
+  group_by(Marital_Status, producto) %>% 
+  summarize(total_gasto = mean(gasto))
+
+df_gasto_edad <- df_final_analisis %>% 
+  gather(key = "producto", value = "gasto", c("MntFishProducts", "MntFruits","MntGoldProds","MntMeatProducts","MntSweetProducts", "MntWines")) %>% 
+  group_by(grupo_edad, producto) %>% 
+  summarize(total_gasto = mean(gasto))
+
+grafico_educ_producto <- ggplot(df_gasto_educacion, aes(x=total_gasto, y=producto, fill=Education)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  scale_fill_viridis_d(option = "viridis") + 
+  ggtitle("Gasto medio por producto según Educación")
+print(grafico_educ_producto)
+
+grafico_ecivil_producto <- ggplot(df_gasto_ecivil, aes(x=total_gasto, y=producto, fill=Marital_Status)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  scale_fill_viridis_d(option = "viridis") + 
+  ggtitle("Gasto medio por producto según Estado Civil")
+print(grafico_ecivil_producto)
+
+grafico_edad_producto <- ggplot(df_gasto_edad, aes(x=total_gasto, y=producto, fill=grupo_edad)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  scale_fill_viridis_d(option = "viridis") + 
+  ggtitle("Gasto medio por producto según Grupo de Edad")
+print(grafico_edad_producto)
+  
+```
+
+En todas las categorías el patrón de consumo según nivel educativo es muy similar con la excepción del gasto en vinos. En este caso el gasto en este producto por parte de los clientes que poseen un doctorado o máster es mayor que en el resto de niveles. Esto podría deberse a que normalmente los vinos suelen ser un producto con un precio elevado y que solo se pueden permitirse aquellas personas que poseen un salario más elevado. Si atendemos al comportamiento según el estado civil se ve un gasto medio homogéneo en todas las categorias de producto y de estado civil. Por último, según el grupo de edad aparecen dos patrones que merecen mención. En primer lugar, las personas mayores de 75 en media gastan significativamente más en vino que el resto de grupos de edad y que el gasto medio en productos cárnicos es mayor para los mayores de 75 y los menores de 35 que en el resto de grupos de edad.  
+Una información que también parece de gran utilidad en estos tiempos sería conocer el uso de la web por parte de los clientes. Por ello contesto a la siguiente pregunta:  
+
++ ¿Cómo se distribuye el número de visitas según nivel educativo? ¿Y según estado civil? ¿Y según edad?  
+```{r}
+df_visitas_web_edad <- df_final_analisis %>% group_by(grupo_edad) %>% 
+    summarise(media_visitas=mean(NumWebVisitsMonth)) %>%
+    arrange(desc(media_visitas))
+df_visitas_web_educ <- df_final_analisis %>% group_by(Education) %>% 
+    summarise(media_visitas=mean(NumWebVisitsMonth)) %>%
+    arrange(desc(media_visitas))
+df_visitas_web_eciv <- df_final_analisis %>% group_by(Marital_Status) %>% 
+    summarise(media_visitas=mean(NumWebVisitsMonth)) %>% 
+    arrange(desc(media_visitas))
+formattable(df_visitas_web_edad)
+formattable(df_visitas_web_educ)
+formattable(df_visitas_web_eciv)
+```
+
+Como se aprecia los individuos en la franja de los 35 a los 55 son los que mas veces en media visitan la web del supermercado. Esto se puede explicar por el hecho de que son el tipo de cliente más común y por tanto son los que más pendientes van a estar de la web. No sorprende que sean los clientes mayores de 75 los que menos uso den a la web. El comportamiento según nivel educativo es muy similar y no merce mención especial. Por último según estado civil los clientes que más frecuentan la web son los se encuentran sin pareja seguidos de cerca por los casados y los divorciados.
+
++ ¿Cómo es el gasto total según el número de hijos?
+```{r}
+df_final_analisis$num_hijos <- as.factor(df_final_analisis$num_hijos)
+print(boxplot_var_target_plot(df_final_analisis, "total_gastos", "num_hijos"))
+```
+
+Los datos en este caso presentan una respuesta contraintuitiva a lo que era esperable. Como se ve aquellas familias sin hijos son las que mayor gasto destinan en este supermercado. Seguidas de las que tienen un hijo, dos y 3. Una posible explicación a esto es que este supermercado no posea las mejores ofertas para productos a nivel familiar. Esto haría que las familias numerosas se decantaran por otros establecimientos.
+
+La última pregunta que se presenta en este breve caso de estudio es:
+
++ ¿Existe relación entre el nivel de renta y las compras que se hacen con descuento sobre el total de compras?
+```{r}
+grafico_income_descuentos <- ggplot(df_final_analisis, aes(x=ratio_compras_descuento, y=log(Income), na.rm=TRUE)) + 
+  geom_point(aes(color="red")) + 
+  geom_smooth(method="lm") + 
+  theme(legend.position = "none") +
+  labs(x = "Compras Descuento / Total Compras", y = "Income") + 
+  ggtitle("Relación entre renta y el ratio de Compras con descuento sobre el total de compras")
+
+print(grafico_income_descuentos)
+```
+
+Como era previsible existe una relación negativa entre ambas variables. Esto quiere decir que a mayor nivel de renta menor es el número de compras que realizas con descuento. 
+
+Para concluir me gustaria destacar que esto es solo un ejemplo de las cuestiones que se pueden contestar. Obviamente el nivel de profundidad con el que se ha intentado responderlas es básico. Simplemente, se ha hecho con la intención de intentar dar una pequeña respuesta gráfica a cuestiones de interés que se pueden derivar de estos datos.
+
+# 1.6 Equilibrado de la muestra
+Para realizar un equilibrado de la muestra voy a utilizar los métodos SMOTE, Adasyn y Muestreo del cubo. En particular, la variable target en el equilibrado va a ser \textbf{\textit{response}} la cual hace referencia a los clientes que han aceptado la última campaña y los que no. El objetivo de usar SMOTE y Adasyn es comparar si las diferencias entre ambas técnicas generan resultados muy diferentes.
+```{r}
+formattable(distinct_function_count(df_final, "Response"))
+```
+
+Puede verse que el número de clientes que no aceptaron la oferta no llega al 15%. Un hecho importante a la hora de realizar el sobremuestreo y el inframuestreo de una población es que las variables de interés no cambien drsticamente su distribución antes y despues de hacer el muestreo. Es por ello que una vez que haya aplicado ambos métodos comprobaré si existen diferencias significativas que me puedan hacer rechazar el procedimiento aplicado.
+Antes de comenzar voy a agrupar algunas variables para facilitarme el trabajo posteriormente
+```{r}
+df_final_equilibrado <- df_final %>%
+  mutate(total_gastos = MntWines+MntFruits+MntMeatProducts+MntFishProducts+MntSweetProducts+MntGoldProds,
+         total_compras = NumWebPurchases + NumCatalogPurchases + NumStorePurchases,
+         num_hijos = Kidhome+Teenhome,
+         edad = 2024 - Year_Birth,
+         grupo_edad = cut(as.numeric(edad), breaks = c(25, 35, 45, 55, 65, 75, Inf),
+                    labels = c("Under 35", "35-45", "46-55", "56-65", "66-75", "Over 75")))
+
+            
+```
+
+En primer lugar, se realiza el undersampling de la clase mayoritaria mediante el muestre del cubo.
+```{r}
+# Datos donde efectuamos selección de las ofertas rechazadas
+df_no <- df_final_equilibrado %>% filter(Response == 0)
+
+# Número de ofertas rechazadas
+df_rechazados <- nrow(df_no)
+
+# Creamos las variables indicadores para cada una de las variables de equilibrio. 
+
+# Variable que vale 1 en todas las partes (para comprobar la estimación del tamaño poblacional)
+UNO = rep(1, df_rechazados) 
+
+# Variables cuantitativas
+X1 <- df_no[ , c("Income", "total_gastos", "total_compras", "NumDealsPurchases", "NumWebVisitsMonth", "Recency")]
+
+# Variables cualitativas - creación de las variables indicadoras
+X2 <- disjunctive(df_no$Marital_Status)
+colnames(X2) <- levels(df_no$Marital_Status)
+
+X3 <- disjunctive(df_no$Education)
+colnames(X3) <- levels(df_no$Education)
+
+X4 <- disjunctive(df_no$grupo_edad)
+colnames(X4) <- levels(df_no$grupo_edad)
+
+# Matriz de diseño
+X <- as.matrix( cbind( UNO, X1, X2, X3, X4) )
+
+# Tamaño de la muestra
+sample_no_df <- 700
+
+# Probabilidades de inclusión
+pik = rep( sample_no_df / df_rechazados, df_rechazados )
+
+# extracción de la muestra
+set.seed(123)
+s = samplecube(X, pik, method = 2, order = 1, comment = FALSE)
+
+# Generación de fichero resultante
+sample_no_df_final = cbind( df_no, s )
+sample_no_df_final <- sample_no_df_final[ sample_no_df_final$s == 1, ]
+sample_no_df_final$s  <- NULL
+```
+
+```{r}
+Totales <- apply(X, 2, sum)
+Horvitz.Thompson <- apply(X * s / pik, 2, sum)
+calidad <- cbind.data.frame(Totales, Horvitz.Thompson)
+calidad$Desv.Abs. <- round(calidad$Totales - calidad$Horvitz.Thompson, 2)
+calidad$Desv.Rel. <- round((calidad$Totales / calidad$Horvitz.Thompson - 1) *100, 2)
+
+formattable(calidad)
+```
+
+```{r}
+# Datos de las ofertas aceptadas
+df_yes <- df_final_equilibrado %>% filter(Response == 1)
+
+df_sample <- bind_rows(sample_no_df_final, df_yes)
+```
+
+El sobremuestreo con SMOTE:
+```{r}
+
+df_equilibrio_smote <- SmoteClassif(Response ~., df_sample,
+                           k=5, # número de vecinos
+                           C.perc = "balance",
+                           dist = "HEOM") # métrica para tener en cuenta variables numéricas y nominales
+
+formattable(df_equilibrio_smote %>% group_by(Response) %>% count()) 
+```
+
+El sobremuestreo con Adasyn:
+```{r}
+df_equilibrio_adasyn <- AdasynClassif(Response ~ ., df_sample,
+                                           k=6, # número de vecinos
+                                           dist = "HEOM") # métrica para tener en cuenta variables numéricas y nominales
+
+formattable(distinct_function_count(df_equilibrio_adasyn, "Response"))
+```
+
+Es importante resaltar que al usar SMOTE con la opcion C.perc ="balance" se van a eliminar instancias de la clase mayoritaria y se van a crear instancias sintéticas de la minoritaria hasta alcanzar un nivel parejo. Es por ello que va a haber menos observaciones usando SMOTE que con Adasyn.
+Utilizando las funciones distribucion_muestreo y distinct_function_count que defino a continuación compruebo si las distribuciones de algunas de las variables claves como son Income y gasto_total (este análisis se podría extender a más variables pero por no sobrecargar el notebook me limito a estas) se han respetado tras el undersampling y el oversampling.
+```{r}
+distribucion_muestreo <- function(data_mayor, data_mayor_down, data_menor, data_menor_up, var){
+  var<- as.symbol(var) 
+  grafico_1 <- ggplot() +
+    geom_density(data = data_mayor, aes(x = !!var, fill = 'ORIGINAL'), alpha = 0.5) + 
+    geom_density(data = data_mayor_down, aes(x = !!var, fill = 'DOWN'), alpha = 0.5) + 
+    scale_fill_manual(values = c(ORIGINAL = 'skyblue', DOWN = 'red'), name='') + 
+    ggtitle('Distribución clase mayoritaria')
+  grafico_2 <- ggplot() +
+    geom_density(data = data_menor, aes(x = !!var, fill = 'ORIGINAL'), alpha = 0.5) + 
+    geom_density(data = data_menor_up %>% filter(Response == 1), aes(x = !!var, fill = 'UP'), alpha = 0.5) + 
+    scale_fill_manual(values = c(ORIGINAL = 'skyblue', UP = 'red'), name='') + 
+    ggtitle('Distribución clase minoritaria')
+  grid.arrange(grafico_1, grafico_2, nrow=2, ncol=1)
+
+}
+
+distinct_function_count_muestreo <- function(data_mayor, data_mayor_down, data_menor, data_menor_up, var){
+  # Función para obtener los distintos niveles de una variable
+  # contando las veces que aparecen en la tabla 
+  
+  var <- as.symbol(var)
+  
+  counts_values_var_mayor_original <- data_mayor %>% group_by(!!var) %>% count %>% arrange(desc(n))
+  total_mayor_original <- sum(counts_values_var_mayor_original$n)
+  counts_values_var_mayor_original <- counts_values_var_mayor_original %>% mutate(percentage = round(n / total_mayor_original * 100, 3)) %>% select(c("percentage"))
+  
+  counts_values_var_mayor_down <- data_mayor_down %>% filter(Response == 0) %>% group_by(!!var) %>% count %>% arrange(desc(n))
+  total_mayor_down <- sum(counts_values_var_mayor_down$n)
+  counts_values_var_mayor_down <- counts_values_var_mayor_down %>% mutate(percentage = round(n / total_mayor_down * 100, 3)) %>% select(c("percentage"))
+  
+  counts_values_var_menor_original <- data_menor %>% group_by(!!var) %>% count %>% arrange(desc(n))
+  total_menor_original <- sum(counts_values_var_menor_original$n)
+  counts_values_var_menor_original <- counts_values_var_menor_original %>% mutate(percentage = round(n / total_menor_original * 100, 3)) %>% select(c("percentage"))
+  
+  counts_values_var_menor_up <- data_menor_up %>% filter(Response == 1) %>% group_by(!!var) %>% count %>% arrange(desc(n))
+  total_menor_up<- sum(counts_values_var_menor_up$n)
+  counts_values_var_menor_up <- counts_values_var_menor_up %>% mutate(percentage = round(n / total_menor_up * 100, 3)) %>% select(c("percentage"))
+  
+  counts_value_var <- cbind(counts_values_var_mayor_original, counts_values_var_mayor_down[c(2)], counts_values_var_menor_original[c(2)], counts_values_var_menor_up[c(2)])
+  
+  table <- formattable(counts_value_var)
+  colnames(table)[2:5] <- c("original mayoritaria", "muestreo mayoritaria", "original minoritaria", "muestreo minoritaria")
+  return(table)
+}
+```
+
+
++ Income (Oversampling con Adasyn)
+```{r}
+distribucion_muestreo(df_no, df_equilibrio_adasyn, df_yes, df_equilibrio_adasyn, "Income")
+```
+
+
++ Income (Oversampling con SMOTE)  
+```{r}
+distribucion_muestreo(df_no, df_equilibrio_smote, df_yes, df_equilibrio_smote, "Income")
+```
+
+
++ total_gastos (Oversamplng con Adasyn)
+```{r}
+distribucion_muestreo(df_no, df_equilibrio_adasyn, df_yes, df_equilibrio_adasyn, "total_gastos")
+```
+
+
++ total_gastos (Oversampling con SMOTE)
+```{r}
+distribucion_muestreo(df_no, df_equilibrio_smote, df_yes, df_equilibrio_smote, "total_gastos")
+
+```
+
+
+Es visible que las densidades tanto para la clase minoritaria como mayoritaria tras usar el método Adasyn, SMOTE y el muestreo del cubo son bastante parecidas a las que se tenían previamente. Si bien es verdad que parece que el oversampling de SMOTE es más preciso. Por ello concluyo que los datos producidos tras el muestreo son lo suficientemente precisos para utilizarlos en análisis futuros. De todos modos, he de recalcar que el sobremuestreo de SMOTE parece más recomendable.
+Por último, muestro si la distribución de las variables edad, educación y estado civil difieren mucho antes y después del muestreo. El significado de las columnas en las tablas que aparecen a continuación es el siguiente. La columna 2 hace referencia a cómo se distribuye la variable de interés para las instancias de la clase mayoritaria antes del downsampling, la columna 3 para las instancias de la clase mayoritaria cuando ya ha tenido lugar el downsampling, la columna 4 a las instancias de la clase minoritaria antes del oversampling y la columna 5 a las instancias de las clase minoritaria tras el oversampling. Todos estos valores hacen referencia a la frecuencia de las categorías dentro de la distribución.
+```{r}
+formattable(distinct_function_count_muestreo(df_no, df_equilibrio_smote, df_yes, df_equilibrio_smote, "grupo_edad"))
+```
+
+```{r}
+formattable(distinct_function_count_muestreo(df_no, df_equilibrio_smote, df_yes, df_equilibrio_smote, "Education"))
+```
+
+```{r}
+formattable(distinct_function_count_muestreo(df_no, df_equilibrio_smote, df_yes, df_equilibrio_smote, "Marital_Status"))
+```
+
+Como se aprecia el downsampling y el oversampling son bastante respetuosos con las distribuciones previas. Por ello se conluye que los datos generados a través del muestreo son válidos para realizar los análisis que se deseen en el futuro. Estos análisis pueden estar destinados a segmentación de clientes, a estudios más profundos sobre relaciones causales entre las variables e incluso si se recogieran datos sobre los mismos individuos en otro momento del tiempo se podrían plantear modelos con datos de panel para estudiar dinámicas y posibles efectos fijos de los clientes.

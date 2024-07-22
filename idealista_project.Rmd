@@ -1,0 +1,1660 @@
+---
+title: "Evaluación Módulo 5"
+author: "Javier Alonso Padilla"
+date: "2024-02-22"
+output:
+  html_document:
+    theme: cerulean
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+El objetivo de este examen es predecir el precio de la vivienda en 3 ciudades distintas del mercado inmobiliario español. Las ciudades sujetas al estudio son Madrid, Barcelona y Valencia. Los datos de cada ciudad proceden del paquete desarrollado por el equipo de Data Science de Idealista. En concreto, como viene explicado en el repositorio [https://paezha.github.io/idealista18/](repositorio de Github) cada ciudad tiene disponible tres objetos distintos. Estos tres objetos contienen información acerca de las viviendas, información espacial de cada barrio e información espacial de los puntos de interés de cada ciudad (centro de la ciudad, calle más importante y paradas de metro). El grueso de la información está disponible en el primer objeto que he nombrado anteriormente. En particular, están disponibles 42 variables que contienen información de cada vivienda. Éstas son:
+
++ ASSETID
+Identificador único del activo
+
++ PERIOD
+Fecha YYYYMM, indica el trimestre en que se extrajo el anuncio, usamos YYYY03 para el primer trimestre, YYYY06 para el segundo, YYYY09 para el tercero y YYYY12 para el cuarto
+
++ PRICE
+Precio solicitado para el anuncio en idealista expresado en euros
+
++ UNITPRICE
+Precio en euros por metro cuadrado
+
++ CONSTRUCTEDAREA
+Área construida de la vivienda en m²
+
++ ROOMNUMBER
+Número de habitaciones
+
++ BATHNUMBER
+Número de baños
+
++ HASTERRACE
+Variable dummy para terraza (toma 1 si hay terraza, 0 en caso contrario)
+
++ HASLIFT
+Variable dummy para ascensor (toma 1 si hay ascensor en el edificio, 0 en caso contrario)
+
++ HASAIRCONDITIONING
+Variable dummy para aire acondicionado (toma 1 si hay aire acondicionado, 0 en caso contrario)
+
++ AMENITYID
+Indica las comodidades incluidas (1 - sin muebles, sin comodidades de cocina, 2 - comodidades de cocina, sin muebles, 3 - comodidades de cocina, con muebles)
+
++ HASPARKINGSPACE
+Variable dummy para estacionamiento (toma 1 si se incluye estacionamiento en el anuncio, 0 en caso contrario)
+
++ ISPARKINGSPACEINCLUDEDINPRICE
+Variable dummy para estacionamiento (toma 1 si el estacionamiento está incluido en el precio del anuncio, 0 en caso contrario)
+
++ PARKINGSPACEPRICE
+Precio del espacio de estacionamiento en euros
+
++ HASNORTHORIENTATION
+Variable dummy para orientación (toma 1 si la orientación es norte en el anuncio, 0 en caso contrario) - Nota importante: las características de orientación no son características ortogonales, una casa orientada al norte también puede estar orientada al este
+
++ HASSOUTHORIENTATION
+Variable dummy para orientación (toma 1 si la orientación es sur en el anuncio, 0 en caso contrario) - Nota importante: las características de orientación no son características ortogonales, una casa orientada al norte también puede estar orientada al este
+
++ HASEASTORIENTATION
+Variable dummy para orientación (toma 1 si la orientación es este en el anuncio, 0 en caso contrario) - Nota importante: las características de orientación no son características ortogonales, una casa orientada al norte también puede estar orientada al este
+
++ HASWESTORIENTATION
+Variable dummy para orientación (toma 1 si la orientación es oeste en el anuncio, 0 en caso contrario) - Nota importante: las características de orientación no son características ortogonales, una casa orientada al norte también puede estar orientada al este
+
++ HASBOXROOM
+Variable dummy para trastero (toma 1 si se incluye trastero en el anuncio, 0 en caso contrario)
+
++ HASWARDROBE
+Variable dummy para armario (toma 1 si se incluye armario en el anuncio, 0 en caso contrario)
+
++ HASSWIMMINGPOOL
+Variable dummy para piscina (toma 1 si se incluye piscina en el anuncio, 0 en caso contrario)
+
++ HASDOORMAN
+Variable dummy para portero (toma 1 si hay portero en el edificio, 0 en caso contrario)
+
++ HASGARDEN
+Variable dummy para jardín (toma 1 si hay jardín en el edificio, 0 en caso contrario)
+
++ ISDUPLEX
+Variable dummy para dúplex (toma 1 si es un dúplex, 0 en caso contrario)
+
++ ISSTUDIO
+Variable dummy para apartamento de soltero (estudio en español) (toma 1 si es un apartamento para una sola persona, 0 en caso contrario)
+
++ ISINTOPFLOOR
+Variable dummy que indica si el apartamento está ubicado en el último piso (toma 1 si está en el último piso, 0 en caso contrario)
+
++ CONSTRUCTIONYEAR
+Año de construcción (fuente: anunciante)
+
++ FLOORCLEAN
+Indica el número de piso empezando desde 0 para planta baja (fuente: anunciante)
+
++ FLATLOCATIONID
+Indica el tipo de vistas que tiene el piso (1 - exterior, 2 - interior)
+
++ CADCONSTRUCTIONYEAR
+Año de construcción según la fuente catastral (fuente: catastro), nota esta cifra puede diferir de la dada por el anunciante
+
++ CADMAXBUILDINGFLOOR
+Número máximo de pisos del edificio (fuente: catastro)
+
++ CADDWELLINGCOUNT
+Número de viviendas en el edificio (fuente: catastro)
+
++ CADASTRALQUALITYID
+Calidad catastral (fuente: catastro)
+
++ BUILTTYPEID_1
+Valor dummy para el estado del piso: 1 nueva construcción, 0 en caso contrario (fuente: anunciante)
+
++ BUILTTYPEID_2
+Valor dummy para el estado del piso: 1 de segunda mano a restaurar, 0 en caso contrario (fuente: anunciante)
+
++ BUILTTYPEID_3
+Valor dummy para el estado del piso: 1 de segunda mano en buen estado, 0 en caso contrario (fuente: anunciante)
+
++ DISTANCE_TO_CITY_CENTER
+Distancia al centro de la ciudad en km
+
++ DISTANCE_TO_DIAGONAL
+Distancia a la Avinguda Diagonal en km; Diagonal es una calle principal que atraviesa la ciudad en diagonal a la cuadrícula de calles
+
++ geometry
+Geometría de las características simples en latitud y longitud
+
+
+
+El ejercicio se estructura de la siguiente manera. Comienzo analizando de manera exploratoria los datos de las tres ciudades, con la intención de hacerme a los datos y poder conocer un poco mejor las posibles relaciones existentes entre variables. Luego, planteo los primeros modelos con la librería h2o. Estos modelos me permiten dilucidar que algoritmos van a ser los que mejor van a funcionar y sobre los que he de centar mis esfuerzos. Tras ello, presento un breve feature engineering con la idea de que me ayude a mejorar las estimaciones de los modelos previos. Una vez tenga preparados mis datos y conozco los modelos con mayor potencial entreno un gran abánico de modelos con los algoritmos disponibles en la librería caret. Para decidir con que modelos finales he de elaborar mis predicciones muestro los resultados de cada uno de ellos y los analizo con una comparación de modelos. Finalmente interpreto los resultados de los mejores modelos. Por último y para concluir el ejercicio muestro en un vídeo la API que he levantado para reproducir las predicciones del model ganador por un usuario cualquiera.
+
+Es importante destacar que cada ciudad va a ser analizada por separado ya que puede ocurrir que cada localización tenga su propia idiosincracia y variables que pueden ser importantes en un lugar pueden perder importancia en otros. De todas formas, la metodología va a ser análoga en los tres casos. En el análisis exploratorio se van a incluir los resultados para las tres ciudades. Sin embargo, en la parte de los modelos solo va a ser incluida la ciudad de Madrid.
+
+# 1. Carga de librerías y datos
+
+En primer lugar cargo las librerías necesarias para llevar a cabo el ejercicio.
+
+```{r}
+rm(list = ls())
+
+suppressWarnings(suppressPackageStartupMessages({
+    #-- Data cleaning
+    library(tidyr)
+    library(dplyr)
+  
+    #-- Automatic EDA
+    library(DataExplorer)
+    library(inspectdf)
+    library(skimr)
+  
+    #-- Execution time
+    library(tictoc)
+  
+    #-- Tables output
+    library(kableExtra)
+    library(knitr)
+    library(formattable)
+    library(flextable)
+  
+    #-- Missing imputation
+    library(missRanger)
+  
+    #-- Graphics  
+    library(ggplot2)
+    library(patchwork)
+    library(gridExtra)
+  
+    #-- Correlation plot
+    library(corrplot)
+  
+    #-- Modeling
+    library(caret)
+    library(h2o)
+  
+    #-- Miscelaneous
+    library(tibble)
+    library(stringr)
+    library(forcats)
+    library(glmnet)
+    library(kernlab)
+    library(RSNNS)
+    library(gbm)
+    library(xgboost)
+  
+    #-- Explainability
+    library(DALEX)
+    library(DALEXtra)
+  
+    #-- Data
+    library(idealista18)
+  
+    #-- Spatial Analysis
+    library(sf)
+}))
+
+madrid_sale        <- Madrid_Sale
+madrid_polygons    <- Madrid_Polygons
+madrid_points      <- Madrid_POIS
+
+barcelona_sale     <- Barcelona_Sale
+barcelona_polygons <- Barcelona_Polygons
+barcelona_points   <- Barcelona_POIS
+
+valencia_sale      <- Valencia_Sale
+valencia_polygons  <- Valencia_Polygons
+valencia_points    <- Valencia_POIS
+
+
+```
+
+El dataset de viviendas de Madrid contiene incialmente 94815 viviendas. El dataset de Barcelona contiene 61486 observaciones y el de Valencia 33622. 
+
+# 2. Exploratory Data Analysis
+
+Para comenzar el análisis realizo un análisis exploratorio que me permite ganar más conocimiento acerca de los datos con los que estoy trabajando. Antes de nada elimino las filas que estén duplicadas, ya que como avisan los autores en el repositiorio del paquete hay viviendas que aparecen varias veces. 
+
+```{r}
+df_list <- list(madrid_sale, barcelona_sale, valencia_sale)
+df_polygon <- list(madrid_polygons, barcelona_polygons, valencia_polygons)
+df_list <- lapply(df_list, function(x) {
+  df <- x %>% 
+    distinct(ASSETID, .keep_all = TRUE) %>%
+    as.data.frame()
+  
+  return(df)
+})
+
+madrid_sale    <- as.data.frame(df_list[1])
+barcelona_sale <- as.data.frame(df_list[2])
+valencia_sale  <- as.data.frame(df_list[3])
+
+```
+
+Después de haber eliminado los duplicados estoy interesado en los siguientes aspectos:
+
++ 1) Porcentaje de NA 
+
++ 2) Distribución de las variables numéricas y categóricas
+
++ 3) Visualización geográfica e interrelación entre posibles variables
+
+```{r}
+NA_function <- function(data, ciudad){
+  df <- data %>%
+  st_drop_geometry()
+  desc_df <- skim(df)
+  var_type_missing_df <- desc_df %>% 
+  mutate(n_missing_perc = 100 * round(1-complete_rate, 3)) %>%
+  select(skim_type, skim_variable, n_missing, n_missing_perc) %>% 
+  arrange(skim_type, n_missing)
+
+  table <- formattable(var_type_missing_df) %>%
+    kable(caption = ciudad)
+  
+  return(table)
+}
+
+NA_function(madrid_sale, "Madrid")
+
+```
+
+
+Para Barcelona:
+```{r}
+NA_function(barcelona_sale, "Barcelona")
+```
+
+Para Valencia:
+```{r}
+NA_function(valencia_sale, "Valencia")
+```
+
+Contestando el primer punto llama la atención que los NAs aparecen en las mismas variables en los tres conjuntos de datos. Para el caso de la variable **CONSTRUCTIONYEAR** voy a eliminarla porque posee muchos missings. Voy a hacer lo mismo con **FLATLOCATIONID** porque viendo los valores que toma considero que no va a ser explicativa para la parte de negocio. Por último, la variable **FLOORCLEAN** tampoco va a ser imputada ya que no considero que vaya a tener un gran potencial explicativo. Estos pasos de preprocesado junto la creación de algunas variables que pueden ser interesantes serán llevadas a cabo en un paso posterior de feature engineering. 
+
+Otro aspecto que llama la atención es que muchas de las variables numéricas son en realidad de tipo factor ya que hacen referencia a la presencia o no de una cualidad concreta en la vivienda ofertada. Algunos ejemplos de estas variables son: 
+
++ **HASELEVATOR**
+
++ **HASSWIMMINGPOOL**
+
++ **HASTERRACE**
+
++ **HASLIFT**
+
++ **HAPARKINGSPACE**
+
+Por ello, estas variables las convierto a tipo factor. Asimismo, añado al dataset de viviendas información sobre el barrio donde se localiza la vivienda ya que me parece interesante conocer información con granularidad a nivel barrio. Para ello utilizo los conjuntos de datos que tienen como sufijo **_Polygons** y la función st_intersects del paquete **sf**. 
+```{r}
+intersects_list               <- st_intersects(madrid_sale$geometry, madrid_polygons$geometry)
+madrid_sale$neighbourhoods    <- sapply(intersects_list, function(x){
+  if (length(x) == 1) as.character(madrid_polygons$LOCATIONNAME[x]) else as.character(madrid_polygons$LOCATIONNAME[x[1]])})
+madrid_sale$neighbourhoods    <- as.factor(madrid_sale$neighbourhoods)
+
+intersects_list               <- st_intersects(barcelona_sale$geometry, barcelona_polygons$geometry)
+barcelona_sale$neighbourhoods <- sapply(intersects_list, function(x){
+  if (length(x) == 1) as.character(barcelona_polygons$LOCATIONNAME[x]) else as.character(barcelona_polygons$LOCATIONNAME[x[1]])})
+barcelona_sale$neighbourhoods <- as.factor(barcelona_sale$neighbourhoods)
+
+intersects_list               <- st_intersects(valencia_sale$geometry, valencia_polygons$geometry)
+valencia_sale$neighbourhoods  <- sapply(intersects_list, function(x){
+  if (length(x) == 1) as.character(valencia_polygons$LOCATIONNAME[x]) else as.character(valencia_polygons$LOCATIONNAME[x[1]])})
+valencia_sale$neighbourhoods  <- as.factor(valencia_sale$neighbourhoods)
+
+df_list <- list(madrid_sale, barcelona_sale, valencia_sale)
+
+preprocessing_function <- function(data) {
+ df <- data %>%
+  mutate( HASTERRACE                         = factor(HASTERRACE, labels = c("No", "Si"))) %>%
+  mutate( HASLIFT                            = factor(HASLIFT, labels = c("No", "Si"))) %>%
+  mutate( HASAIRCONDITIONING                 = factor(HASAIRCONDITIONING, labels = c("No", "Si"))) %>%
+  mutate( HASPARKINGSPACE                    = factor(HASPARKINGSPACE, labels = c("No", "Si"))) %>%
+  mutate( ISPARKINGSPACEINCLUDEDINPRICE      = factor(ISPARKINGSPACEINCLUDEDINPRICE, labels = c("No", "Si"))) %>%
+  mutate( HASNORTHORIENTATION                = factor(HASNORTHORIENTATION, labels = c("No", "Si"))) %>%
+  mutate( HASSOUTHORIENTATION                = factor(HASSOUTHORIENTATION, labels = c("No", "Si"))) %>%
+  mutate( HASEASTORIENTATION                 = factor(HASEASTORIENTATION, labels = c("No", "Si"))) %>%
+  mutate( HASWESTORIENTATION                 = factor(HASWESTORIENTATION, labels = c("No", "Si"))) %>%
+  mutate( HASBOXROOM                         = factor(HASBOXROOM, labels = c("No", "Si"))) %>%
+  mutate( HASWARDROBE                        = factor(HASWARDROBE, labels = c("No", "Si"))) %>%
+  mutate( HASSWIMMINGPOOL                    = factor(HASSWIMMINGPOOL, labels = c("No", "Si"))) %>%
+  mutate( HASDOORMAN                         = factor(HASDOORMAN, labels = c("No", "Si"))) %>%
+  mutate( HASGARDEN                          = factor(HASGARDEN, labels = c("No", "Si"))) %>%
+  mutate( ISDUPLEX                           = factor(ISDUPLEX, labels = c("No", "Si"))) %>%
+  mutate( ISSTUDIO                           = factor(ISSTUDIO, labels = c("No", "Si"))) %>%
+  mutate( ISINTOPFLOOR                       = factor(HASSWIMMINGPOOL, labels = c("No", "Si"))) %>%
+  mutate( BUILTTYPEID_1                      = factor(BUILTTYPEID_1)) %>%
+  mutate( BUILTTYPEID_2                      = factor(BUILTTYPEID_2)) %>%
+  mutate( BUILTTYPEID_3                      = factor(BUILTTYPEID_3)) %>%
+  mutate( CADASTRALQUALITYID                 = factor(CADASTRALQUALITYID)) %>%
+  mutate( AMENITYID                          = factor(AMENITYID)) %>%
+  mutate( FLATLOCATIONID                     = factor(FLATLOCATIONID)) %>%
+  filter( DISTANCE_TO_CITY_CENTER < 150) %>%
+  select(-c("ASSETID", "PERIOD", "geometry"))
+ 
+ return(df)
+}
+
+df_list <- lapply(df_list, preprocessing_function)
+
+madrid_sale                   <- as.data.frame(df_list[1])
+
+barcelona_sale                <- as.data.frame(df_list[2])
+
+valencia_sale                 <- as.data.frame(df_list[3])
+
+```
+
+Una vez aplicada la conversión de tipos realizo un EDA. Para analizar a las variables categóricas utilizo la librería inspectdf ya que es una buena forma de generar conocimiento de manera rápida. Muestro los resultados para Madrid, Barcelona y Valencia.
+```{r}
+x_madrid <- inspect_cat(madrid_sale)
+show_plot(x_madrid)
+x_barcelona <- inspect_cat(barcelona_sale)
+show_plot(x_barcelona)
+x_valencia <- inspect_cat(valencia_sale)
+show_plot(x_valencia)
+```
+
+Los comportamiento de las variables categóricas son muy similares por ciudad y no se encuentran diferencias reseñables.
+
+Las correlaciones de las variables del dataset de Madrid:
+```{r}
+x_madrid_cor <- inspect_cor(madrid_sale) %>% 
+  head(10)
+show_plot(x_madrid_cor)
+```
+
+Las dos relaciones que merecen mención son la de los metros construidos con el precio con una correlación por encima de 0.6 y la distancia a la castellana está correlacionada negativamente con el precio por metro cuadrado. El resto de éstas estas correlaciones tienen el signo esperado. 
+
+Para Barcelona y Valencia:
+```{r}
+x_barcelona_cor <- inspect_cor(barcelona_sale) %>% 
+  head(10)
+show_plot(x_barcelona_cor)
+x_valencia_cor <- inspect_cor(valencia_sale) %>% 
+  head(10)
+show_plot(x_valencia_cor)
+```
+
+Las correlaciones son similares a las obtenidas anteriormente. En las siguientes líneas de esta sección estudio más detalladamente algunas de las relaciones bivariantes.
+
+Considero que hacer EDA automático para variables continúas con la librería inspectdf no es lo mejor porque no se aprecia claramente con detalle las características de algunas variables. De todos modos, también lo utilizo para generar una primera visualización de las variables numéricas. Además, defino en el siguiente chunk de código una función que me permiten analizar con más detalles algunas de las variables de las que a priori parecen más importantes. Para el caso de Madrid (no muestro Barcelona y Valencia)
+```{r}
+x <- inspect_num(madrid_sale)
+show_plot(x)
+histogram_plot <- function(data, var, bins=50){
+  # Función pinta histograma sobre variable numérica
+  
+  # Son eliminados los registros nulos de la variable previamente 
+  # a pintar los valores que toman dicha variable 
+  
+  # data: dataframe
+  # var: string con variable numérica del dataset
+  # bins: número de cortes de la variable cuantitativa (por defecto 50)
+  
+  var <- as.symbol(var)
+  
+  data_na_omit <- data %>% select(!!var) %>% filter(!is.na(!!var))
+  
+  g <- ggplot(data_na_omit, aes(x=!!var)) + geom_histogram(bins=50, fill = "lightblue")
+}
+
+```
+
+De manera individual las variables CADCONSTRUCTIONYEAR, CONSTRUCTEDAREA, UNITPRICE y CADMAXBUILDINGFLOOR:
+```{r}
+histo_price <- histogram_plot(madrid_sale, "CADCONSTRUCTIONYEAR")
+histo_constructed <- histogram_plot(madrid_sale, "CONSTRUCTEDAREA")
+histo_castellana <- histogram_plot(madrid_sale, "UNITPRICE")
+histo_center <- histogram_plot(madrid_sale, "CADMAXBUILDINGFLOOR")
+
+grid.arrange(histo_price, histo_constructed,
+             histo_castellana, histo_center,
+             nrow=2, ncol = 2)
+```
+
+Llama la atención que hay viviendas con una fecha de construcción previa al 1900. La moda de metros construidos está en torno a 100 $m^2$, con una moda por precio por $m^2$ en torno a 2500 euros. A todo esto hay que añadir que la mayoría de viviendas está en torno a 0 y 10 pisos pero hay viviendas que tienen 20 pisos o más.
+
+Para obtener una información más detallada de los datos voy a realizar algunas visualizaciones bivariantes entre variables que aparentemente están estrechamente conectadas con el precio de la vivienda. Los gráficos que muestro a continuación son un mero ejemplo ya que con la riqueza de variables que poseen las bases de datos es obvio que existirán más relaciones, pero creo que para hacerse una idea estos son más que suficientes.
+```{r}
+bivariate_scatter <- function(data, xvar, target, title, xlab, ylab){
+  xvar <- as.symbol(xvar)
+  target <- as.symbol(target)
+  graph <- ggplot(data, aes(x = !!xvar, y = !!target)) +
+  geom_point(color = 'deepskyblue', size = 2, alpha = 0.2) + 
+  labs(x = xlab, y = ylab, title = title) +
+  theme(plot.title = element_text(face = 'bold', color = 'black', size = 9),
+        axis.title.y = element_text(size = 6, face = 'bold'),
+        axis.text = element_text(size = 6))
+  return(graph)
+}
+
+bivariate_barplot <- function(data, xvar, target, title, xlab, ylab){
+  xvar <- as.symbol(xvar)
+  target <- as.symbol(target)
+  filter_data <- data %>% filter(!is.na(!!xvar)) %>% group_by(!!xvar) %>% summarize(median = median(!!target)) %>% arrange(desc(median)) 
+  
+  graph <- ggplot(filter_data, aes(x = reorder(!!xvar, median), y = median)) +
+    geom_bar(stat = 'identity', position="dodge", fill = 'deepskyblue') +
+    coord_flip() + 
+    labs(x = ylab, y = xlab, title = title) + #las coordenadas están cambiadas por eso x en y
+    theme(plot.title = element_text(face = 'bold', color = 'black', size = 9),
+          axis.title.y = element_text(size = 6, face = 'bold'),
+          axis.text = element_text(size = 6))
+  return(graph)
+}
+
+bivariate_barplot_cond <- function(data, xvar, target, title, xlab, ylab, cond){
+  xvar <- as.symbol(xvar)
+  target <- as.symbol(target)
+  if (cond=="top"){
+    filter_data <- data %>% filter(!is.na(!!xvar)) %>% group_by(!!xvar) %>% summarize(median = median(!!target)) %>% arrange(desc(median)) %>% head(10)
+  } else {
+    filter_data <- data %>% filter(!is.na(!!xvar)) %>% group_by(!!xvar) %>% summarize(median = median(!!target)) %>% arrange(desc(median)) %>% tail(10)
+  }
+  
+  graph <- ggplot(filter_data, aes(x = reorder(!!xvar, median), y = median)) +
+    geom_bar(stat = 'identity', position="dodge", fill = 'deepskyblue') +
+    coord_flip() + 
+    labs(x = ylab, y = xlab, title = title) + #las coordenadas están cambiadas por eso x en y
+    theme(plot.title = element_text(face = 'bold', color = 'black', size = 9),
+          axis.title.y = element_text(size = 6, face = 'bold'),
+          axis.text = element_text(size = 6))
+  return(graph)
+}
+```
+
+La relación entre los metros de las casa y el precio:
+```{r}
+metres_price <- bivariate_scatter(madrid_sale, "CONSTRUCTEDAREA", "PRICE", "Precio vs Metros Construidos", "Metros Construidos", "Precio")
+print(metres_price)
+```
+
+Cuantos más metros construidos tenga la casa mayor va a ser el precio.
+
+Una característica de la vivienda que es determinante para el precio es el número de habitaciones.
+```{r}
+hab_price <- bivariate_barplot(madrid_sale, "ROOMNUMBER", "PRICE", "Precio mediano según habitaciones", "Precio mediano", "Habitaciones")
+print(hab_price)
+```
+
+Como era esperable a mayor número de habitaciones mayor es el precio.
+
+Otro característica que va a afectar al valor de la vivienda es que posea caracterísiticas concretas como piscina o ascensor.
+```{r}
+ascensor_price <- bivariate_barplot(madrid_sale, "HASLIFT", "PRICE", "Precio mediano según ascensor", "Precio mediano", "Ascensor")
+piscina_price <- bivariate_barplot(madrid_sale, "HASLIFT", "PRICE", "Precio mediano según piscina", "Precio mediano", "Piscina")
+grid.arrange(ascensor_price, piscina_price, ncol=2)
+```
+
+El precio mediano de las casas con asccensor va a ser mayor que las que no tienen. Y lo msimo sucede con las que tienen piscina. Estos comportamientos van a ser iguales en las otras ciudades sujetas a estudio.
+
+Si atiendo al precio mediano por barrio:
+```{r}
+median_by_neigh_top <- bivariate_barplot_cond(madrid_sale, "neighbourhoods", "PRICE", "Precio mediano por barrio", "Precio mediano", "Barrio", "top")
+median_by_neigh_bottom <- bivariate_barplot_cond(madrid_sale, "neighbourhoods", "PRICE", "Precio mediano por barrio", "Precio mediano", "Barrio", "bottom")
+grid.arrange(median_by_neigh_top, median_by_neigh_bottom, ncol=2)
+```
+
+Los barrios con los precios más elevados son Recoletos, Castellana y El Viso. Estos barrios son barrios céntricos los cuales está muy cercanos de la Castellana y de paradas de metro. Además su localización está tirando al norte de la ciudad. Por otra parye, los barrios más baratos son San Cristobal, Amposta y Hellín.
+
+Si repetimos este ejercicio para Barcelona y Valencia.
+```{r}
+metres_price <- bivariate_scatter(barcelona_sale, "CONSTRUCTEDAREA", "PRICE", "Precio vs Metros Construidos", "Metros Construidos", "Precio")
+hab_price <- bivariate_barplot(barcelona_sale, "ROOMNUMBER", "PRICE", "Precio mediano según habitaciones", "Precio mediano", "Barrio")
+ascensor_price <- bivariate_barplot(barcelona_sale, "HASLIFT", "PRICE", "Precio mediano según ascensor", "Precio mediano", "Barrio")
+piscina_price <- bivariate_barplot(barcelona_sale, "HASLIFT", "PRICE", "Precio mediano según piscina", "Precio mediano", "Barrio")
+
+
+grid.arrange(metres_price, hab_price, ascensor_price, piscina_price, nrow=2,ncol=2)
+```
+
+El comportamiento es igual al de Madrid y es el esperable. El precio va a ser mayor cuanto más servicios posea la casay  mayor sea en tamaño.
+```{r}
+median_by_neigh_top <- bivariate_barplot_cond(barcelona_sale, "neighbourhoods", "PRICE", "Precio mediano por barrio", "Precio mediano", "Barrio", "top")
+median_by_neigh_bottom <- bivariate_barplot_cond(barcelona_sale, "neighbourhoods", "PRICE", "Precio mediano por barrio", "Precio mediano", "Barrio", "bottom")
+grid.arrange(median_by_neigh_top, median_by_neigh_bottom, ncol=2)
+```
+
+Los barrios con los precios más elevados son Les Tres Torres, Pedralbes y Sant Gervasi - Galvany que están en la zona alta de la ciudad. Y los barrios con menores precios son Ciutat Meridiana - Torre Barró - Vallbona, La Trinitat Nova y La Trinitat Vella.
+Y para Valencia:
+```{r}
+metres_price <- bivariate_scatter(valencia_sale, "CONSTRUCTEDAREA", "PRICE", "Precio vs Metros Construidos", "Metros Construidos", "Precio")
+hab_price <- bivariate_barplot(valencia_sale, "ROOMNUMBER", "PRICE", "Precio mediano según habitaciones", "Precio mediano", "Barrio")
+ascensor_price <- bivariate_barplot(valencia_sale, "HASLIFT", "PRICE", "Precio mediano según ascensor", "Precio mediano", "Barrio")
+piscina_price <- bivariate_barplot(valencia_sale, "HASLIFT", "PRICE", "Precio mediano según piscina", "Precio mediano", "Barrio")
+
+
+grid.arrange(metres_price, hab_price, ascensor_price, piscina_price, nrow=2, ncol=2)
+```
+
+Se observan los mismos comportamientos que en las dos otras ciudades.
+```{r}
+median_by_neigh_top <- bivariate_barplot_cond(valencia_sale, "neighbourhoods", "PRICE", "Precio mediano por barrio", "Precio mediano", "Barrio", "top")
+median_by_neigh_bottom <- bivariate_barplot_cond(valencia_sale, "neighbourhoods", "PRICE", "Precio mediano por barrio", "Precio mediano", "Barrio", "bottom")
+grid.arrange(median_by_neigh_top, median_by_neigh_bottom, ncol=2)
+```
+
+Los barrios con viviendas más caras son El Pla de Remei, Jaume Roig y Sant Frances. Por otra parte los barrios con precios más bajos son Natzaret, Els Orriols y Ciutat Fallera.
+
+Por último para terminar esta sección expongo algunas visualizaciones que permiten ganar un cocnocimiento muy valioso acerca de los datos espaciales. 
+```{r}
+madrid_geodata <- madrid_sale %>% 
+  filter(!is.na(neighbourhoods)) %>% 
+  group_by(neighbourhoods) %>% 
+  summarize(median = median(PRICE)) %>%
+  rename(LOCATIONNAME = neighbourhoods)
+
+
+madrid_geodata <- left_join(madrid_polygons, madrid_geodata, by="LOCATIONNAME")
+
+price_spatial_madrid <- ggplot(madrid_geodata) + 
+  geom_sf(aes(fill=median)) + 
+  labs(title = "Precio mediano por barrio en Madrid")
+
+print(price_spatial_madrid)
+```
+
+La conclusión que podemos sacar de este gráfico es que la zona centro de MAdrid es la que mayor precio mediano posee. Otro aspecto interesante es que los precios de la zona norte son más elevados que los de los distritos de la zona sur. 
+Este gráfico también se puede obtener para las otras dos ciudades sujetas a estudio.
+```{r}
+barcelona_geodata <- barcelona_sale %>% 
+  filter(!is.na(neighbourhoods)) %>% 
+  group_by(neighbourhoods) %>% 
+  summarize(median = median(PRICE)) %>%
+  rename(LOCATIONNAME = neighbourhoods)
+
+
+barcelona_geodata <- left_join(barcelona_polygons, barcelona_geodata, by="LOCATIONNAME")
+
+price_spatial_barcelona <- ggplot(barcelona_geodata) + 
+  geom_sf(aes(fill=median)) + 
+  labs(title = "Precio mediano por barrio en Barcelona")
+
+print(price_spatial_barcelona)
+```
+
+La zona con precios más elevados de Barcelona es la zona alta de la ciudad como es bien sabido. También llama la atención los precios bajos en los barrios periféricos de Barcelona los cuales suelen ser barrios obreros en zonas con mucha presencia de industria.
+
+Y para Valencia:
+```{r}
+valencia_geodata <- valencia_sale %>% 
+  filter(!is.na(neighbourhoods)) %>% 
+  group_by(neighbourhoods) %>% 
+  summarize(median = median(PRICE)) %>%
+  rename(LOCATIONNAME = neighbourhoods)
+
+
+valencia_geodata <- left_join(valencia_polygons, valencia_geodata, by="LOCATIONNAME")
+
+price_spatial_valencia <- ggplot(valencia_geodata) + 
+  geom_sf(aes(fill=median)) + 
+  labs(title = "Precio mediano por barrio en Valencia")
+
+print(price_spatial_valencia)
+```
+
+De nuevo para este caso, al igual que en Madrid, el centro es la zona más cotizada. Del resto de barrios de la ciudad no conozco la idiosincracia como en los dos casos anteriores por lo que no puedo comentar mucho más.
+
+También podemos visualizar cómo se distribuyen las casas con jardín por distrito en las 3 ciudades. Comienzo por Madrid:
+
+```{r}
+my_sf_madrid <- st_as_sf(madrid_sale, coords = c('LONGITUDE', 'LATITUDE'))
+my_sf_madrid <- st_set_crs(my_sf_madrid, st_crs(madrid_geodata)) 
+ggplot() + 
+  geom_sf(data = madrid_geodata) +
+  geom_sf(data = my_sf_madrid, aes(color = HASGARDEN), alpha = 0.2) + 
+  labs(title = "Presencia de jardín (MADRID)")
+```
+
+Se aprecia claramente que las casa con jardín son más frecuentes en las zonas periféricas. Especialmente, en la zona norte la cual tiene una renta per cápita mayor. Aunque hay que decir que también existe un número notable de casas con jardín en la zona sur. Esto parece algo razonable porque en general la densidad de población de MAdrid como comunidad no es muy elevada y suele haber espacio para zonas residenciales con jardín.
+
+Para Barcelona:
+```{r}
+my_sf_barcelona <- st_as_sf(barcelona_sale, coords = c('LONGITUDE', 'LATITUDE'))
+my_sf_barcelona <- st_set_crs(my_sf_barcelona, st_crs(barcelona_geodata)) 
+ggplot() + 
+  geom_sf(data = barcelona_geodata) +
+  geom_sf(data = my_sf_barcelona, aes(color = HASGARDEN), alpha = 0.2) + 
+  labs(title = "Presencia de jardín (BARCELONA)")
+```
+
+Es llamativo que Barcelona parece no tener apenas casas con jardín. Este hecho es algo que era esperable porque Barcelona es una ciudad que posee bastante mayor densidad de población que Barcelona. Solo parece distinguirse tonos azulados en la zona alta de la ciudad. Dicha es zona es, como vimos anteriormente, la que posee casas más caras.
+
+Y Valencia:
+```{r}
+my_sf_valencia <- st_as_sf(valencia_sale, coords = c('LONGITUDE', 'LATITUDE'))
+my_sf_valencia <- st_set_crs(my_sf_valencia, st_crs(valencia_geodata)) 
+ggplot() + 
+  geom_sf(data = valencia_geodata) +
+  geom_sf(data = my_sf_valencia, aes(color = HASGARDEN), alpha = 0.2) + 
+  labs(title = "Presencia de jardín (VALENCIA)")
+```
+
+Los tonos azulados se perciben mejor en la zona norte de la ciudad. Esta zona está alejada del centro de la ciudad. Por lo que de nuevo se obtienen resultado coherentes con lo esperado. Lejos del centro va a haber más espacio para edificar y para poder construir casas con jardín.
+
+Una vez se ha ganado este conocimiento acerca de la base de datos, estoy listo para comenzar con la modelización del precio de las viviendas.
+
+# 3. Modelo inicial H20
+
+Antes de todo, me gustaria resaltar que los modelos solo van a ser estimados para la ciudad de Madrid ya que no quiero sobrecargar con resultados el documento final. De todas formas, la metodología para las otras dos ciudades sería análoga.
+Siguiendo los pasos realizados en la autoevaluación estimo unos modelo inicial con H20 para ganar conocimiento del potencial explicativo de las variables sin una transformación adicional. Esta primer paso me va a permitir:
+
++ Ver qué algoritmos funcionan mejor
+
++ Tener una primera noción del nivel de precisión que podemos alcanzar
+
++ Determinar las variables más importantes
+
+Al igual que se hizo en la autoevaluacion, voy a ejecutar un `h2o.automl()` durante 400 segundos y permitiremos que h2o use todos los algoritmos excepto GLM y StackedEnsemble (tampoco XGBoost porque tengo un sistema operativo Windows). Para ejecutar estos modelos selecciono una serie de variables que tienen una fácil interpretación y se pueden explicar a negocio. El hecho de seleccionar variables también se hace para evitar problemas de multicolinealidad entre variables predictoras y para evitar problemas de "overfitting". He de mencionar que la muestra se divide en training (70%), validation (15%) y test (15%). Las variables que utilizo en estos modelos son las que han mostrado mayor correlación en el EDA y además considero que a priori pueden tener más capacidad explicativa. Asimismo, he realizado pruebas que no están incluidas en este archivo con las variables del tipo de vivienda y su orientación y como no tenían un poder explicativo signifcativo no las he incluido. Basicamente las que utlizo son aquellas que hacen referencia a las distancias a puntos claves, número de hab. y baños y las que hacen referencia a ciertos espacios de la vivenda como ascensor o piscina. Lo último que me gustaría decir de estas estimaciones con h2o es que utilizo como variable dependiente el precio y no el logaritmo de este como haré en la sección 5.
+
+```{r}
+h2o.init()
+h2o.no_progress()
+
+data   <- as.h2o(madrid_sale)
+
+splits <- h2o.splitFrame(
+                         data = data, 
+                         ratios = c(0.7, 0.15),  # partition data into 70%, 15%, 15% chunks
+                         destination_frames = c("train", "valid", "test"), # frame ID (not required)
+                         seed = 1  # setting a seed will guarantee reproducibility
+                         )  
+train  <- splits[[1]]
+valid  <- splits[[2]]
+test   <- splits[[3]]
+
+y <- "PRICE"
+x <- c("ROOMNUMBER", "HASLIFT", "HASPARKINGSPACE", "HASSWIMMINGPOOL", "ISDUPLEX", "DISTANCE_TO_CASTELLANA", "BATHNUMBER", "HASDOORMAN", "DISTANCE_TO_METRO", "HASTERRACE", "DISTANCE_TO_CITY_CENTER", "CADASTRALQUALITYID", "HASBOXROOM", "HASGARDEN", "ISINTOPFLOOR", "HASWARDROBE", "ISSTUDIO", "LATITUDE", "LONGITUDE")
+print(x)
+```
+
+Defino el automl:
+```{r}
+aml <- h2o.automl(
+                    x                  = x,
+                    y                  = y, 
+                    training_frame     = train,
+                    validation_frame   = valid,
+                    nfold              = 3,
+                    max_runtime_secs   = 400,
+                    stopping_metric    = "RMSE",
+                    exclude_algos      = c("GLM", "StackedEnsemble"),
+                    stopping_tolerance = 0.1,     
+                    stopping_rounds    = 5,
+                    seed               = 12345,
+                    sort_metric        = c("RMSE")
+                 )
+```
+
+
+Los 10 mejores modelos que obtengo:
+```{r}
+lb <- aml@leaderboard
+
+#-- Tabla de modelos top-10 y worst-10.
+lb_df <- as.data.frame(lb) %>% head(10)
+lb_df
+```
+
+Como se aprecia los mejores modelos son RF y GBM. Por ello, posteriormente en la sección 5 dedicaré más atención a estos a la hora de estimarlos con la idea de mejorar estos resultados obtenidos con H2o. 
+
+Las características del mejor modelo:
+```{r}
+best_mod <- aml@leader
+best_mod
+```
+
+Lo más importante desde mi punto de vista es el $R^2$ que alcanza. Concretamente explica alrededor del 84% de la varianza de la variable precio. También obtengo en media (de las diferentes CVs) un $MAE$ de 75088 euros con una desviación tipica de 195 euros. Me gusta más basarme en el $R^2$ en este caso porque el $MAE$ y el $RMSE$ no me parecen del todo explicativos e interpretables porque no es lo mismo fallar en 75000 euros en una casa de 100000 euros que una de 1600000. Por este motivo en las secciones posteriores crearé una métrica que me ayude a identificar el nicel de precisión según el nivel de precios de la vivienda.
+
+Las variables con más capacidad explicativa en el mejor modelo son:
+```{r}
+# Variables Importantes - Modelo Ganador
+var_import <- h2o.varimp(aml@leader)
+
+ggplot(var_import[1:10, ], aes( x = fct_reorder(variable, scaled_importance), y = scaled_importance)) +
+  geom_col(fill = 'darkgreen') +
+  coord_flip() +
+  labs( 
+        title    = "VARIABLES IMPORTANTES" ,
+        subtitle = "Top-10",
+        y        = 'Importancia Escalada', 
+        x        = "Variable"
+      ) + 
+  theme_bw() +
+  theme(
+    # Labels appearance
+    plot.title   = element_text(size = 14, face = "bold", colour = "black" ),
+    axis.title.x = element_text(size = 14, face = "bold", colour = "black"),    
+    axis.title.y = element_text(size = 14, face = "bold", colour = "black"),    
+    axis.text.x  = element_text(size = 12, face = "bold", colour = "black"), 
+    axis.text.y  = element_text(size = 12, face = "bold", colour = "black")
+  )
+```
+
+La variable con mayor capacidad explicativa es el número de baños seguida de número de habitaciones. La correlación entre ambas no es excesivamente elevada (en torno a 0.58) por lo que no va a haber problemas de multicolinealidad. Además, también son importantes la latitud, la calidad catastral y y la distancia a la Castellana. No muestro los resultados pero en el resto de ciudades se obtienen cosas similares con las variables distancias y las variables de número de habitaciones y baños siendo importantes.
+
+Los hiperparámetros del mejor modelo son:
+```{r}
+best_model_details <- h2o.getModel(best_mod@model_id)
+
+print(best_model_details)
+```
+
+Lo más llamativo es que el número de árboles estimados ha sido solo de 50 por lo que simplemente aumentando este número (teniendo cuidado de que no se produzca overfitting) los resultados deberían mejorar.
+
+Como conclusión de estos modelos introductorios:
+
++ Lo que mejor funciona son RF y GBM
+
++ Se tiene una primera noción de las variables más explicativas
+
++ Con un esfuerzo mayor es esperable obtener $R^2$ por encima del 84% con caret
+
+# 4. Feature engineering
+
+En esta sección voy a llevar a cabo una serie de pasos que me van a ayudar a obtener unos mejores modelos. Básicamente voy a eliminar de los conjuntos de datos las viviendas que tienen un precio por debajo del 5º quintil y por encima del 95º quintil. Asimismo, elimino aquellas observaciones con menos de 30 metros y más de 300 y aquellas con más de 6 habitaciones o con más de 3 baños. Por último, aplico una transformación logarítmica a la variable precio, genero una variable antiguedad y me quedo solo con las variables que tienen un valor para negocio. LAs variables que utilizo como explicativas en mis modelos son "ROOMNUMBER", "HASLIFT", "HASPARKINGSPACE", "HASSWIMMINGPOOL", "ISDUPLEX", "DISTANCE_TO_CASTELLANA", "BATHNUMBER", "HASDOORMAN", "DISTANCE_TO_METRO", "HASTERRACE", "DISTANCE_TO_CITY_CENTER", "CADASTRALQUALITYID", "HASBOXROOM", "HASGARDEN", "ISINTOPFLOOR", "HASWARDROBE", "ISSTUDIO", "LATITUDE", "LONGITUDE" y "antiguedad".
+
+```{r}
+feature_engineering <- function(data){
+  df_final <- data %>%
+  filter(PRICE >= quantile(PRICE, 0.05), PRICE <= quantile(PRICE, 0.95)) %>%
+  filter(CONSTRUCTEDAREA >= 30, CONSTRUCTEDAREA <= 300) %>%
+  filter(ROOMNUMBER <= 6, BATHNUMBER <= 3) %>%
+  mutate(log_price = log(PRICE)) %>% 
+  mutate(antiguedad = 2018 - CADCONSTRUCTIONYEAR) %>%
+  select(c("log_price","ROOMNUMBER", "HASLIFT", "HASPARKINGSPACE", "HASSWIMMINGPOOL", "ISDUPLEX", "DISTANCE_TO_CASTELLANA", "BATHNUMBER", "HASDOORMAN", "DISTANCE_TO_METRO", "HASTERRACE", "DISTANCE_TO_CITY_CENTER", "CADASTRALQUALITYID", "HASBOXROOM", "HASGARDEN", "ISINTOPFLOOR", "HASWARDROBE", "ISSTUDIO", "LATITUDE", "LONGITUDE", "antiguedad")) %>%
+  drop_na() %>%
+  as.data.frame()
+  
+  
+  return(df_final)
+}
+
+madrid_final <- feature_engineering(madrid_sale)
+
+#madrid_final    <- as.data.frame(df_list[1])
+
+#barcelona_final <- as.data.frame(df_list[2])
+
+#valencia_final  <- as.data.frame(df_list[3])
+```
+
+
+
+# 5. Entrenamiento Modelos
+
+En esta sección voy a estimar una serie de modelos con la librería **caret**. Comienzo definiendo la receta de control. En las estimaciones básicas y que no son exigentes computacionalmente es la que utilizaré. Con esta receta aplico 10 validaciones cruzadas 3 veces lo que da lugar a 30 muestras. Además, divido la muestra entre train (80%) y test (20%). Esta receta no va a ser igual en todos los modelos ya que con tantas observaciones hacer 30 remuestreos es muy exigente computacionalmente.
+```{r}
+setwd("C:/Users/alons/OneDrive/Documentos/Curso_Big_Data_UNED/modulo_5")
+# Entrenamos cada modelo por separado para generar los .RDS
+# No se entrena en el proceso de compilación del rMarkdown.
+entrena <- 1
+
+if (entrena  == 1) {
+  
+  # TrainControl general con método de validación cruzada con 10 particiones por 1 repeticiones.
+  
+  control <- trainControl(
+                          method        = "repeatedcv", 
+                          number        = 10,
+                          repeats       = 3, 
+                          returnResamp  = "final",
+                          allowParallel = TRUE
+                         )
+  #Como metrica utilizaremos RMSE en todos los casos.
+  metrica <- "RMSE"
+  
+}
+
+if (entrena  == 1) {
+  
+  # Creamos muestras de entrenamiento y de test para los usuarios (80% - 20%)
+  set.seed(100)
+  train_sample <- createDataPartition(y = madrid_final$log_price,p = .8, list = FALSE)
+  train_reg    <- madrid_final[train_sample,] 
+  test_reg     <- madrid_final[-train_sample,]
+  
+  
+  #-- Save train/test reg.
+  save(train_reg, test_reg, file = "./traintest_reg.RData")
+  
+}
+entrena <- 0
+```
+
+## 5.1 GLM
+```{r}
+if (entrena  == 1) {
+set.seed(7)
+
+tic()
+modelo_glm_reg <- train(
+                        log_price ~., 
+                        data      = train_reg, 
+                        method    = "glmnet",
+                        family    = "poisson", 
+                        metric    = metrica, 
+                        preProc   = c("center", "scale"), 
+                        trControl = control
+                       )
+
+saveRDS(modelo_glm_reg, "./modelo_glm_reg.RDS")
+
+toc()
+}
+```
+
+## 5.2 LASSO
+```{r}
+if (entrena  == 1) {
+set.seed(7)
+tic()
+#Control de la Técnica de Remuestreo: 50 muestras bootstrap
+lasso.ctrl = trainControl( method = "boot" , number = 50)
+lassoGrid = expand.grid( .alpha = 1 , .lambda = seq( .001 , .1 , length = 10 ))
+
+modelo_lasso_reg <- train(
+                           log_price ~., 
+                           data      = train_reg, 
+                           method    = "glmnet", 
+                           tuneGrid  = lassoGrid, 
+                           metric    = metrica, 
+                           preProc   = c("center", "scale"), 
+                           trControl = lasso.ctrl
+                          )
+
+saveRDS(modelo_lasso_reg, "./modelo_lasso_reg.RDS")
+toc()
+}
+```
+
+## 5.3 CART
+```{r}
+if (entrena  == 1) {
+set.seed(7)
+  
+tic()
+cartGrid <- expand.grid(cp = 0:20/20)
+modelo_cart_reg <- train(
+                          log_price ~.,
+                          data      = train_reg,
+                          method    = "rpart",
+                          metric    = metrica,
+                          preProc   = c("center", "scale"),
+                          trControl = control,
+                          tuneGrid  = cartGrid
+                         )
+
+saveRDS(modelo_cart_reg, "./modelo_cart_reg.RDS")
+
+toc()   
+
+} 
+```
+
+## 5.4 Random Forest
+
+Para la estimación del modelo de Random Forest con caret voy a utilizar una receta de control diferente. En este caso solo voy a hacer 5 validaciones cruzadas con 3 repeticiones lo que hace que haya 15 muestras. 
+```{r}
+if (entrena  == 1) {
+set.seed(9)
+  
+tic()
+
+control_rf <- trainControl(
+                          method        = "repeatedcv", 
+                          number        = 5,
+                          repeats       = 3, 
+                          returnResamp  = "final",
+                          allowParallel = TRUE
+                         )
+
+tune_grid = expand.grid(
+                         mtry          = 3:7,
+                         splitrule     = c("variance"),
+                         min.node.size = 5
+                        )
+
+modelo_rf_reg <- train( 
+                           log_price ~., 
+                           data          = train_reg, 
+                           method        = "ranger", 
+                           metric        = "RMSE", 
+                           trControl     = control_rf, 
+                           tuneGrid      = tune_grid,
+                           importance    = 'impurity'
+                          )
+ 
+saveRDS(modelo_rf_reg, "./modelo_rf_reg.RDS")
+
+toc()
+
+}
+```
+
+## 5.5 SVM
+Al igual que con el random forest utilizo una receta de control con 5 validaciones cruzadas y 3 repeticiones. Además, para entrenar el modelo solo voy a trabajr con el 10% de la muestra de entrenamiento porque sino la esfuerzo computacional es inabarcable.
+```{r}
+if (entrena  == 1) {
+set.seed(7)
+  
+tic()
+
+  
+# Creamos muestras de entrenamiento y de test para SVM (10% - 90%)
+set.seed(100)
+train_sample_svm <- createDataPartition(y = madrid_final$log_price,p = .1, list = FALSE)
+train_reg_svm    <- madrid_final[train_sample_svm,] 
+test_reg_svm     <- madrid_final[-train_sample_svm,]
+  
+  
+control_svm <- trainControl(
+                          method        = "repeatedcv", 
+                          number        = 5,
+                          repeats       = 3, 
+                          returnResamp  = "final",
+                          allowParallel = TRUE
+                         )
+
+svmGrid <- expand.grid(
+                        .C     = c(55, 65),
+                        .sigma = c(0.02, 0.03)
+                       )
+
+modelo_svm_reg <- train(
+                         log_price ~.,
+                         data      = train_reg_svm,
+                         method    = "svmRadial",
+                         metric    = metrica,
+                         preProc   = c("center", "scale"),
+                         trControl = control_svm,
+                         tuneGrid  = svmGrid
+                        )
+
+saveRDS(modelo_svm_reg, "./modelo_svm_reg_linear.RDS")
+
+toc()
+}
+```
+
+## 5.6 Perceptrón multicapa
+```{r}
+if (entrena  == 1) {
+set.seed(7)
+
+tic()
+
+control_mlp <- trainControl(
+                          method        = "repeatedcv", 
+                          number        = 5,
+                          repeats       = 3, 
+                          returnResamp  = "final",
+                          allowParallel = TRUE
+                         )
+mlpGrid <- expand.grid(size = c(4:8))
+modelo_mlp_reg <- train( 
+                        log_price ~., 
+                        data      = train_reg, 
+                        method    = "mlp", 
+                        metric    = metrica,  
+                        preProc   = c("center", "scale"),
+                        trControl = control_mlp,  
+                        tuneGrid  = mlpGrid
+                       )
+
+saveRDS(modelo_mlp_reg, "./modelo_mlp_reg.RDS")
+
+toc()
+
+}
+```
+
+## 5.7 GBM
+De nuevo utilizo una receta con 5 validaciones cruzadad y 3 repeticiones.
+```{r}
+if (entrena  == 1) {
+set.seed(7)
+  
+tic()
+gbmGrid <- expand.grid(
+                        n.trees           = 500,
+                        interaction.depth = c(14, 16), 
+                        shrinkage         = 0.1, 
+                        n.minobsinnode    = 10
+                      )
+
+control_gbm <- trainControl(
+                          method        = "repeatedcv", 
+                          number        = 5,
+                          repeats       = 3, 
+                          returnResamp  = "final",
+                          allowParallel = TRUE
+                         )
+modelo_gbm_reg <- train( 
+                        totalPrice ~., 
+                        data      = train_reg, 
+                        method    = "gbm", 
+                        metric    = metrica,  
+                        preProc   = c("center", "scale"),
+                        trControl = control_gbm,   
+                        tuneGrid  = gbmGrid,
+                        verbose   = FALSE
+                       )
+
+saveRDS(modelo_gbm_reg, "./modelo_gbm_reg.RDS")
+toc()
+
+}
+```
+
+## 5.8 XGB 
+```{r}
+if ( entrena  == 1) {
+set.seed(7)
+tic()
+
+grid_xgbTree = expand.grid(
+                            nrounds          = 200,
+                            eta              = c(0.001, 0.3),
+                            max_depth        = c(6),
+                            gamma            = c(1, 3), 
+                            subsample        = c(0.75),
+                            min_child_weight = c(2, 3), 
+                            colsample_bytree = 1
+                           )
+
+modelo_xgb_reg <- train( 
+                        log_price ~., 
+                        data      = train_reg, 
+                        method    = "xgbTree", 
+                        metric    = metrica,  
+                        preProc   = c("center", "scale"),
+                        trControl = control,   
+                        tuneGrid  = grid_xgbTree
+                       )
+
+saveRDS(modelo_xgb_reg, "./modelo_xgb_reg.RDS")
+toc()
+
+}
+```
+
+## 5.9 Bagging
+```{r}
+if (entrena  == 1) {
+set.seed(7)
+  
+tic()
+
+modelo_bag_reg <- caret::train(
+                        log_price ~., 
+                        data      = train_reg, 
+                        method    = "treebag", 
+                        metric    = metrica, 
+                        preProc   = c("center", "scale"), 
+                        trControl = control, 
+                        verbose = FALSE
+                       )
+
+saveRDS(modelo_bag_reg, "./modelo_bag_reg.RDS")
+
+toc()
+
+}
+```
+
+# 6. Resultados de los Modelos
+
+En primer lugar cargo los resultados de los modelos que he guardado como .RDS.
+```{r}
+reg_mod_glm     <- readRDS("./modelo_glm_reg.RDS")
+reg_mod_lasso   <- readRDS("./modelo_lasso_reg.RDS")
+reg_mod_cart    <- readRDS("./modelo_cart_reg.RDS")
+reg_mod_rf      <- readRDS("./modelo_rf_reg.RDS")
+reg_mod_svm     <- readRDS("./modelo_svm_reg_linear.RDS")
+reg_mod_mlp     <- readRDS("./modelo_mlp_reg.RDS")
+reg_mod_gbm     <- readRDS("./modelo_gbm_reg.RDS")
+reg_mod_xgb     <- readRDS("./modelo_xgb_reg.RDS")
+reg_mod_bag     <- readRDS("./modelo_bag_reg.RDS")
+```
+
+Para obtener los resultados de los modelos voy a utilizar una serie de funciones. Dos de estas funciones son las que se han utilizado en la autoevaluación **Medidas_Modelo_reg** y **maquetar**. La otra función que voy a usar es una que he creado yo (**precission_by_price**). Esta función va a aportar el nivel de precisión que tienen las predicciones según el valor de la vivienda. Es decir, voy a clasificar las viviendas en tres niveles distintos:
+
++ Por debajo de 250.000 euros
+
++ Entre 250.000 euros y 500.000 euros
+
++ Por encima de 500.000 euros
+
+Analíticamente la métrica creada calcula para cada observación:
+
+\begin{equation}
+\text{precision} = \left|100 \cdot \frac{y - \hat{y}}{y}\right|
+\end{equation}
+
+Y después computo la mediana para cada grupo de observaciones según su precio.
+
+La motivación para hacer esto es que creo que es bastante factible que los algoritmos funcionen mejor para determinados tipos de vivienda porque hay más observaciones de las que aprender. 
+```{r}
+maquetar <- function(x){
+  ft <- flextable(data = x) %>%
+            fontsize(size = 10, part = "body") %>% 
+            fontsize(size = 12, part = "header")
+  ft <- color(ft, color = "orange", part = "header")
+  return(autofit(ft))
+}
+
+Medidas_Modelo_reg <- function(modelo) {
+ 
+  pred.train           <- predict(modelo, train_reg, type = "raw") %>%
+    exp() %>%
+    as.data.frame()
+  
+  names(pred.train)    <- "Prediccion"
+  pred.train           <- cbind.data.frame(pred.train, Respuesta = exp(train_reg$log_price))
+  R2.train             <- R2(pred.train$Prediccion, pred.train$Respuesta)
+  RMSE.train           <- RMSE(pred.train$Prediccion, pred.train$Respuesta)
+  MAE.train            <- MAE(pred.train$Prediccion, pred.train$Respuesta)
+
+  pred.test            <- predict(modelo, test_reg, type = "raw") %>%
+    exp() %>%
+    as.data.frame()
+  names(pred.test)     <- "Prediccion"
+  pred.test            <- cbind.data.frame(pred.test, Respuesta = exp(test_reg$log_price))
+  R2.test              <- R2(pred.test$Prediccion, pred.test$Respuesta)
+  RMSE.test            <- RMSE(pred.test$Prediccion, pred.test$Respuesta)
+  MAE.test             <- MAE(pred.test$Prediccion, pred.test$Respuesta)
+  
+  Muestra <- c("Entrenamiento", "Test")
+  R2      <- c(R2.train,  R2.test)
+  RMSE    <- c(RMSE.train,  RMSE.test)
+  MAE     <- c(MAE.train,  MAE.test)
+  
+  resul <- data.frame(Muestra, R2, RMSE, MAE)
+  maquetar(resul)
+}
+
+precission_by_price <- function(modelo){
+ 
+  pred.train           <- predict(modelo, train_reg, type = "raw") %>%
+    exp() %>%
+    as.data.frame()
+  names(pred.train)    <- "Prediccion"
+  pred.train           <- cbind.data.frame(pred.train, Respuesta = exp(train_reg$log_price))
+  pred.train$PRICEBIN <- ifelse(pred.train$Respuesta < 250000, "A) Debajo 250k euro",
+                        ifelse(pred.train$Respuesta >= 250000 & pred.train$Respuesta < 500000, "B) Entre 250k and 500k euro", "C) Encima 500k euro"))
+  pred.train$PRECISION <- abs(100 * (pred.train$Respuesta - pred.train$Prediccion) / pred.train$Respuesta)
+  PRECISION.train <- pred.train %>% 
+    group_by(PRICEBIN) %>%
+    summarize(Train_precision = round(median(PRECISION),2)) %>%
+    select(c("Train_precision"))
+  
+  pred.test            <- predict(modelo, test_reg, type = "raw") %>%
+    exp() %>%
+    as.data.frame()
+  names(pred.test)     <- "Prediccion"
+  pred.test            <- cbind.data.frame(pred.test, Respuesta = exp(test_reg$log_price))
+  pred.test$PRICEBIN <- ifelse(pred.test$Respuesta < 250000, "A) Debajo 250k euro",
+                        ifelse(pred.test$Respuesta >= 250000 & pred.test$Respuesta < 500000, "B) Entre 250k and 500k euro", "C) Encima 500k euro"))
+  pred.test$PRECISION <- abs(100 * (pred.test$Respuesta - pred.test$Prediccion) / pred.test$Respuesta)
+  PRECISION.test <- pred.test %>% 
+    group_by(PRICEBIN) %>%
+    summarize(Test_precision = round(median(PRECISION),2)) %>%
+    select(c("Test_precision"))
+
+  house_value = c("Debajo 250k", "Entre 250k-500k", "Encima 500k")
+  
+  resul <- data.frame(Value = house_value, Entrenamiento = PRECISION.train, Test = PRECISION.test)
+  maquetar(resul)  
+}
+```
+
+## 6.1 GLM
+```{r}
+maquetar(reg_mod_glm$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del modelo de Regresión Lineal ordenados según valor del R2")
+```
+
+El mejor $R^2$ es de 73%.
+```{r}
+Medidas_Modelo_reg(reg_mod_glm)
+```
+
+Las precisiones no varían excesivamente entre el conjunto de entrenamiento y de test. Sí que hay diferencias entre los diferentes niveles de precios. Por ejemplo, para las casas con un precio menor de 250.000 euros el error mediano es de 20% mientras que para las de entre 250000 y 50000o está en torno al 16%. 
+```{r}
+precission_by_price(reg_mod_glm) %>% 
+  add_header_lines(values = "Precisión del GLM (%)")
+```
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_glm))
+```
+
+Son muy similares a las que se habían obtenido con h2o.
+
+## 6.2 LASSO
+```{r}
+maquetar(reg_mod_lasso$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del modelo de Regresión Lineal Lasso ordenados según valor del R2")
+```
+
+
+```{r}
+Medidas_Modelo_reg(reg_mod_lasso)
+```
+
+```{r}
+precission_by_price(reg_mod_lasso) %>% 
+  add_header_lines(values = "Precisión del LASSO (%)")
+```
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_lasso))
+```
+
+## 6.3 CART
+```{r}
+maquetar(reg_mod_cart$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del modelo CART ordenados según valor del R2")
+```
+
+Para la muestra de entrenamiento se alcanza un $R^2$ de casi el 90%. Sin embargo, esta cifra para la muestra de test baja signifcativamente a en torno al 80%.
+```{r}
+Medidas_Modelo_reg(reg_mod_cart)
+```
+
+El modelo CART también da como resultado unas cifras bastante buenas en términos de precisión. Los errores más pequeños se obtienen en las predicciones de los precios de la vivienda de menos de 250000 euros. Aunque son bastante similares en las demás categorías.
+```{r}
+precission_by_price(reg_mod_cart) %>% 
+  add_header_lines(values = "Precisión del CART (%)")
+```
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_cart))
+```
+
+Es sorprendente que para el modelo CART las variables más importantes son bastante diferentes a lo visto hasta ahora. Es especialmente llamativo que el número de baños ahora se coloca de las últimas.  LAs variables con más podr explicativo son las variables de distancia y de localización espacial.
+
+## 6.4 Random Forest
+```{r}
+maquetar(reg_mod_rf$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del modelo RF ordenados según valor del R2")
+```
+
+Los modelos de entrenamiento con las diferentes especificaciones suelen alcanzar $R^2$ mejores que los estimados con h2o. 
+
+Aplicando la función maquetar podemos ver que para la muestra de entrenamiento utilizada el $R^2$ es del 97%. En el caso de la muestra test el $R^2$ es del 86%. De este modo el RF se confirma como el mejor modelo hasta ahora.
+```{r}
+Medidas_Modelo_reg(reg_mod_rf)
+```
+
+Si se atiende a la medida de precisión, se observa que este modelo es el que mejores resultados da. En concreto en median se cometen errores de en torno al 10%. Estos son cifras bastante buenas y que desde mi punto de vista aún podrían ser mejoradas. De hecho, estoy seguro que si metieramos la variable unitprice y alguna otra de las que se han dejado sin meter se alcanzarían niveles muy altos de precisión (serían modelos adecuado en un entorno de competición, no sé si buenos en negocio).
+```{r}
+precission_by_price(reg_mod_rf) %>% 
+  add_header_lines(values = "Precisión del RF (%)")
+```
+
+
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_rf))
+```
+Al contrario que para el modelo CART con el RF se vuelve a tener como variables más importantes las que vimos con h2o y los primeros modelos planteados con caret.
+
+## 6.5 SVM 
+```{r}
+maquetar(reg_mod_svm$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del modelo SVM ordenados según valor del R2")
+```
+
+
+```{r}
+Medidas_Modelo_reg(reg_mod_svm)
+```
+
+```{r}
+precission_by_price(reg_mod_svm) %>% 
+  add_header_lines(values = "Precisión del SVM (%)")
+```
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_svm))
+```
+
+## 6.6 Perceptrón Multicapa
+```{r}
+maquetar(reg_mod_mlp$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del MLP ordenados según valor del R2")
+```
+
+
+```{r}
+Medidas_Modelo_reg(reg_mod_mlp)
+```
+
+```{r}
+precission_by_price(reg_mod_mlp) %>% 
+  add_header_lines(values = "Precisión del MLP (%)")
+```
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_mlp))
+```
+
+## 6.7 GBM
+```{r}
+maquetar(reg_mod_gbm$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del GBM ordenados según valor del R2")
+```
+
+
+```{r}
+Medidas_Modelo_reg(reg_mod_gbm)
+```
+
+Si se atiende a la métrica de precisión, el GBM es el segundo mejor modelo.
+```{r}
+precission_by_price(reg_mod_gbm) %>% 
+  add_header_lines(values = "Precisión del GBM (%)")
+```
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_gbm))
+```
+## 6.8 XGB
+```{r}
+maquetar(reg_mod_xgb$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del modelo XGB ordenados según valor del R2")
+```
+
+
+```{r}
+Medidas_Modelo_reg(reg_mod_xgb)
+```
+
+En la muestra de test se alcanza un $R^2$ cercano a 82%. En términos de la métrica de precisión:
+
+```{r}
+precission_by_price(reg_mod_xgb) %>% 
+  add_header_lines(values = "Precisión del XGB (%)")
+```
+
+La categoría de precios con mayor precisión es la de las vivendas con un precio por debajo de 250000 euros. 
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_xgb))
+```
+
+Son muy similares a las encontradas por el RF. Por eso una conclusión que podemos obtener de todos estos modelos es que las variables con más capacidad explicativa son:
+
++ **BATHNUMBER**
+
++ **LATITUDE**
+
++ **DISTANCE_TO_CASTELLANA**
+
+## 6.9 Bagging
+```{r}
+maquetar(reg_mod_bag$results %>% 
+           arrange(-Rsquared) %>% 
+           head(10)) %>% 
+  add_header_lines(values = "Resultados entrenamiento del Bagging ordenados según valor del R2")
+```
+
+
+```{r}
+Medidas_Modelo_reg(reg_mod_bag)
+```
+
+```{r}
+precission_by_price(reg_mod_bag) %>% 
+  add_header_lines(values = "Precisión del Bagging (%)")
+```
+
+Las variables más importantes en este modelo son:
+```{r}
+plot(varImp(reg_mod_bag))
+```
+
+# 7. Comparativa de modelos
+Para determinar que modelos son los mejores no voy a utilizar la función diff() de la librería caret con todos los modelos como se hizo en la autoevaluación sino que voy a usarla con los modelos que son comparables. La razón para no usarla es que debido a que cada modelo está estimado con un número diferente de remuestro los test de hipótesis no son válidos. El hecho de que no haya utilizado el mismo número de resamplings se debe a que hay modelos que he estimado cuyo proceso de entrenamiento es costoso por lo que aumentar el número de resamplings tiene un coste considerable en términos de eficiencia.
+
+Por este motivo para decidir que  modelo es el mejor voy a tener en cuenta diferentes métricas y el número de resamplings que he aplicado en ese modelo. Tengo en cuenta el número de resamplings porque este afecta directamente a la varianza de las estimaciones resultantes de los diferentes modelos. A mayor número de resamplings menor varianza van a tener los estimadores. Por eso viendo los resultados de abajo concluyo que los mejores modelos son RF, GBM y XGB. Doy un valor especial a RF y XGB porque están estimados con menos remuestreos. Un pequeño resumen de los modelos estimados puede verse acontinuación.
+```{r}
+resultados_reg <- resamples(
+                            list(
+                                 
+                                 SVM = reg_mod_svm,
+                                 RF = reg_mod_rf, 
+                                 GBM = reg_mod_gbm,
+                                 MLP = reg_mod_mlp
+                                )
+                            )
+
+resultados_reg_1 <- resamples(
+                            list(
+                                 
+                                 GLM = reg_mod_glm,
+                                 CART = reg_mod_cart,
+                                 BAG = reg_mod_bag, 
+                                 XGB = reg_mod_xgb
+                                )
+                            )
+summary(resultados_reg)
+```
+
+
+```{r}
+dotplot(resultados_reg, scales = list(relation = "free"))
+dotplot(resultados_reg_1, scales = list(relation = "free"))
+```
+
+Por ello, teniendo en cuanto el MAE, el RMSE y principalmente el $R^2$ me voy a quedar con el RF. Además, el número de resamplings con el que está estimado es menor que el segundo mejor modelo (en términos de $R^2$) que es el XGB por lo que si hicieramos el esfuerzo computacional de estimarlos en igualdad de condiciones el RF daría aún mejores resultados.
+
+# 8. Interpretabilidad 
+
+Para el estudio de la interpretabilidad voy a utilizar las funciones disponibles en el paquete **dalex**. Este estudio lo voy a realizar con los mejores modelos estimados que son XGB, RF y GBM.
+```{r}
+load("./traintest_reg.RData")
+
+explainer_xgb_reg <- DALEX::explain(
+                                 reg_mod_xgb,
+                                 label   = "XGB",
+                                 data    = test_reg,
+                                 y       = test_reg$log_price,
+                                 verbose = FALSE
+                              )
+
+explainer_gbm_reg <- DALEX::explain(
+                                 reg_mod_gbm,
+                                 label   = "GBM",
+                                 data    = test_reg,
+                                 y       = test_reg$log_price,
+                                 verbose = FALSE
+                              )
+
+explainer_rf_reg <- DALEX::explain(
+                                 reg_mod_rf,
+                                 label   = "RF",
+                                 data    = test_reg,
+                                 y       = test_reg$log_price,
+                                 verbose = FALSE
+                              )
+
+
+
+#---- Performance
+mp_xgb_reg  <- model_performance(explainer_xgb_reg)
+mp_gbm_reg  <- model_performance(explainer_gbm_reg)
+mp_rf_reg   <- model_performance(explainer_rf_reg)
+
+#----- Plot Comparison each group.
+plot(mp_xgb_reg, mp_gbm_reg, mp_rf_reg, geom = 'boxplot')
+```
+
+Como se había visto anteriormente el mejor modelo es el Random Forest. Por ello, continuo las explicaciones sobre explicabilidad de las variables únicamente con él.
+```{r}
+vi_reg <- model_parts(explainer_rf_reg, loss_function = loss_root_mean_square)
+plot(vi_reg)
+```
+
+LAs variables más imporantantes son prácticamente idénticas a las que se obtuvieron con caret. La variable más importante sigue siendo la latitud seguida del número de baños y la distancia al centro de la ciudad.
+
+También muestro los gráficos de dependencia parcial. El eje y de estos gráficos va a ser el logaritmo del precio.
+```{r}
+pdp_reg <- model_profile(explainer_xgb_reg, variable = "BATHNUMBER", type = "partial")
+plot(pdp_reg)
+```
+
+A mayor número de bañps mayor es el precio. Este cambio es especialmente notable a partir de un baño.
+```{r}
+pdp_reg <- model_profile(explainer_xgb_reg, variable = "LATITUDE", type = "partial")
+plot(pdp_reg)
+```
+
+El crecimiento en precio es exponencial cuando se pasa de la latitud 40.40 que coincide cuando empiezan los distritos centrales de Madrid. Además, el precio sigue creciendo hasta en torno la latitud 40.46 que coincide con la zona más rica de la capital. Posteriormente el precio decae pero vuelve a subir sobre la latitud 40.50 que son los barrios de la zona norte de MAdrid los cuales poseen una renta per cápita elevada.
+
+```{r}
+pdp_reg <- model_profile(explainer_xgb_reg, variable = "DISTANCE_TO_CASTELLANA", type = "partial")
+plot(pdp_reg)
+```
+
+El precio de la vivienda es mayor cuanto más cercano está la vivienda de la castella. El precio desciende progresivamente hasta alcanzar el mínimo en viviendas de 4 a 8 km de la Castellana. Luego el precio vuelve a tener una tendencia creciente desde los 8 a los 12 km de la Castellana.
+
+```{r}
+library(iBreakDown)
+
+
+
+flat_samp <- test_reg %>%
+  select(-log_price) %>%
+  slice_sample(n = 1) 
+
+bd_rf <- break_down(explainer_rf_reg,
+                    flat_samp,
+                    keep_distributions = TRUE) # distributions should be kept
+
+#--- Takes time - ~2 mins
+shap_rf <- shap(explainer_rf_reg, flat_samp)
+```
+
+```{r}
+flat_samp %>% kbl(caption = "Piso seleccionado") %>% kable_minimal()
+```
+
+```{r}
+plot(bd_rf)
+```
+
+Como se ve la mayoría de valores de las variables afectan negativamente a la predicción final. Esto es así porque las características de la vivienda claramente no son las mejores y es obvio que habrá otras con mejores servicios. La variable que afecta más negativamente es la latitud. Como vimos en el gráfico PDP los valores de latitud alrededor de 40 están asociados con los valores de precios más bajos. La variable que más positivamente afecta es la distancia al metro. Finalmente se caba obteniendo que el valor del piso es 134861 euros.
+
+Las variables más importantes para esta instancia:
+```{r}
+plot(shap_rf)
+```
+
+Además esto que acabo de comentar puede ser brevemente explicado mediante lenguaje natural:
+```{r}
+describe(bd_rf)
+```
+```{r}
+describe(shap_rf)
+```
+
+
+# 9. Productivización del modelo
+
+Por último he desplegado una API con el mejor modelo utiliando la librería **plumber**. De este modo el usuario de la API puede obtener una predicción del precio de la vivienda con las características que ha especificado. Es decir, la API pregunta al usuario sobre las 20 variables explicativas que tiene el Random Forest (mejor modelo obtenido anteriormente) y devuelve un resultado numérico que hace referencia al precip predicho de esa vivienda ficticia.
+
+Para ver el funcionamiento de esta API muestro en un vídeo un pequeño ejemplo.
+```{r}
+knitr::include_graphics("C:/Users/alons/Videos/Grabaciones de pantalla/productivizar_modelo.mp4")
+```
+
+Para finalizar el siguiente chunk de código contiene el código utilizado para levantar la API. Indicando la opción eval=FALSE prevengo que esta celda sea ejecutada.
+```{r, eval=FALSE}
+setwd("C:/Users/alons/OneDrive/Documentos/Curso_Big_Data_UNED/modulo_5")
+# Cargo el mejor modelo
+model <- readRDS("./modelo_rf_reg.RDS")
+#* @apiTitle Predicción del valor de viviendas en Madrid
+#* @apiDescription Esta API permite al usuario calcular el valor de una vivienda ficticia según sus especificaciones. Los resultados de las predicciones se obtienen con el mejor modelo resultante de la evaluación. En concreto es un Random Forest que tiene como variables explicativas las que aparecen como opciones en esta API.
+
+#* @get /predict
+#* Predict household price
+#* @param ROOMNUMBER Numeric, Número de habitaciones de la vivienda
+#* @param HASLIFT Character, ¿Quieres que la casa tenga ascensor?
+#* @param HASPARKINGSPACE Character,  ¿Quieres que tenga plaza de parking?
+#* @param HASSWIMMINGPOOL Character, ¿Queires que tenga piscina?
+#* @param ISDUPLEX Character, ¿Quieres que sea un dúplex?
+#* @param DISTANCE_TO_CASTELLANA Numeric, ¿A qué distancia quieres que esté de la Castellana?
+#* @param BATHNUMBER Numeric, ¿Cuántos baños quieres que tenga?
+#* @param HASDOORMAN Character, ¿Quieres portero?
+#* @param DISTANCE_TO_METRO Numeric, ¿A qué distancia quieres que esté del Metro?
+#* @param HASTERRACE Character, ¿Quieres que tenga terraza?
+#* @param DISTANCE_TO_CITY_CENTER Numeric, ¿A qué distancia quieres que esté del Centro?
+#* @param CADASTRALQUALITYID Factor,¿Qué nivel de calidad catastral quieres (0,1,2,...,9)?
+#* @param HASBOXROOM Character, ¿Quieres que tenga trastero?
+#* @param HASGARDEN Character, ¿Quieres que tenga jardín?
+#* @param ISINTOPFLOOR Character, ¿Quieres que esté en la última planta?
+#* @param HASWARDROBE Character, ¿Quieres que tenga ropero?
+#* @param ISSTUDIO Character, ¿Quieres que sea un estudio?
+#* @param LATITUDE Numeric, ¿En qué Latitud quieres que esté?
+#* @param LONGITUDE Numeric,  ¿En qué Longitud quieres que esté?
+#* @param antiguedad Numeric, ¿Qué antigüedad catastral quieres que tenga?
+
+get_predict_hh <- function(ROOMNUMBER=4, HASLIFT="Si", HASPARKINGSPACE="Si", HASSWIMMINGPOOL="Si", ISDUPLEX="No",
+                           DISTANCE_TO_CASTELLANA=0.5, BATHNUMBER=4, HASDOORMAN="Si", DISTANCE_TO_METRO=0.1,
+                           HASTERRACE="Si", DISTANCE_TO_CITY_CENTER=0.6, CADASTRALQUALITYID=7,
+                           HASBOXROOM="Si", HASGARDEN="Si", ISINTOPFLOOR="No", HASWARDROBE="Si", ISSTUDIO="No",
+                           LATITUDE=40, LONGITUDE=-3, antiguedad=2){
+  ROOMNUMBER <- as.numeric(ROOMNUMBER)  
+  DISTANCE_TO_CASTELLANA <- as.numeric(DISTANCE_TO_CASTELLANA) 
+  BATHNUMBER <- as.numeric(BATHNUMBER) 
+  DISTANCE_TO_METRO <- as.numeric(DISTANCE_TO_METRO) 
+  DISTANCE_TO_CITY_CENTER <- as.numeric(DISTANCE_TO_CITY_CENTER) 
+  CADASTRALQUALITYID <- as.factor(CADASTRALQUALITYID) 
+  LATITUDE <- as.numeric(LATITUDE) 
+  LONGITUDE <- as.numeric(LONGITUDE) 
+  antiguedad <- as.numeric(antiguedad) 
+  input_data <- data.frame(ROOMNUMBER=ROOMNUMBER, HASLIFT=HASLIFT, HASPARKINGSPACE=HASPARKINGSPACE, HASSWIMMINGPOOL=HASSWIMMINGPOOL, ISDUPLEX = ISDUPLEX,
+                           DISTANCE_TO_CASTELLANA=DISTANCE_TO_CASTELLANA, BATHNUMBER=BATHNUMBER, HASDOORMAN=HASDOORMAN, DISTANCE_TO_METRO=DISTANCE_TO_METRO,
+                           HASTERRACE=HASTERRACE, DISTANCE_TO_CITY_CENTER=DISTANCE_TO_CITY_CENTER, CADASTRALQUALITYID=CADASTRALQUALITYID,
+                           HASBOXROOM=HASBOXROOM, HASGARDEN=HASGARDEN, ISINTOPFLOOR=ISINTOPFLOOR, HASWARDROBE=HASWARDROBE, ISSTUDIO=ISSTUDIO,
+                           LATITUDE=LATITUDE, LONGITUDE=LONGITUDE, antiguedad=antiguedad)
+  return(exp(predict(model, input_data)))
+}
+
+```
+
+# 10. Detalles de la sesión
+```{r}
+sessionInfo()
+```
+
